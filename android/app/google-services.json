@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "35852590469",
+    "project_id": "pawpark-26b38",
+    "storage_bucket": "pawpark-26b38.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:35852590469:android:7ba602dc678d7998ad38ec",
+        "android_client_info": {
+          "package_name": "com.example.pawpark_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfGCPF8XIqv5g9Pkd4qkz3iOPCrP3-iwo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
