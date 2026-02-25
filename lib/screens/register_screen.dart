@@ -18,7 +18,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Colores basados en el logo de PawPark
+    // Variables para manejar
     final pawBlue = Theme.of(context).colorScheme.primary;
     final parkRed = Theme.of(context).colorScheme.secondary;
     final color = Theme.of(context).colorScheme;
