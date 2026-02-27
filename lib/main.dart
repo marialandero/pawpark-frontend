@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:pawpark_frontend/screens/add_mascota_screen.dart';
 import 'package:pawpark_frontend/screens/perfil_screen.dart';
 import 'package:pawpark_frontend/theme/theme.dart';
 import 'package:pawpark_frontend/utils/util.dart';
@@ -37,19 +38,22 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    final brightness = View.of(context).platformDispatcher.platformBrightness;
+
     TextTheme textTheme = createTextTheme(context, "Roboto", "Didact Gothic");
     MaterialTheme myTheme = MaterialTheme(textTheme);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'PawPark App',
-      theme: brightness == Brightness.light ? myTheme.light() : myTheme.dark(),
+      theme: myTheme.light(),
+      darkTheme: myTheme.dark(),
+      themeMode: ThemeMode.system,
       home: AuthWrapper(),
       routes: {
         "/login": (context) => LoginScreen(),
         "/register": (context) => RegisterScreen(),
         "/perfil": (context) => PerfilScreen(),
+        "/add-mascota": (context) => AddMascotaScreen()
       },
     );
   }

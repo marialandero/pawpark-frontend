@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:http/http.dart' as http;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,11 +17,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final nicknameController = TextEditingController();
+  final locationController = TextEditingController();
+  final nameController = TextEditingController();
   String errorMessage = '';
 
   @override
   Widget build(BuildContext context) {
-    // Variables para manejar
+    // Variables para manejar colores
     final pawBlue = Theme.of(context).colorScheme.primary;
     final parkRed = Theme.of(context).colorScheme.secondary;
     final color = Theme.of(context).colorScheme;
@@ -33,11 +39,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  "assets/images/pawpark_logo.png",
+                  "assets/images/logo_pawpark.png",
                   height: 250,
                   fit: BoxFit.contain,
                 ),
-                SizedBox(height: 25),
 
                 Container(
                   width: double.infinity,
@@ -70,6 +75,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                         SizedBox(height: 20),
+
+                        TextFormField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: "Nombre completo",
+                            prefixIcon: Icon(Icons.person_outline, color: pawBlue),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          validator: (value) => value == null || value.isEmpty ? "Campo obligatorio" : null,
+                        ),
+                        SizedBox(height: 15),
+
+                        TextFormField(
+                          controller: nicknameController,
+                          decoration: InputDecoration(
+                            labelText: "Nickname (ej: @tobi_fan)",
+                            prefixIcon: Icon(Icons.alternate_email, color: pawBlue),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          validator: (value) => value == null || value.isEmpty ? "Campo obligatorio" : null,
+                        ),
+                        SizedBox(height: 15),
+
+                        TextFormField(
+                          controller: locationController,
+                          decoration: InputDecoration(
+                            labelText: "Localidad",
+                            prefixIcon: Icon(Icons.location_on_outlined, color: pawBlue),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          validator: (value) => value == null || value.isEmpty ? "Campo obligatorio" : null,
+                        ),
+                        SizedBox(height: 15),
 
                         TextFormField(
                           controller: emailController,
@@ -198,20 +236,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // 1. Asegúrate de capturar errores en la petición HTTP
+  Future<void> _saveInBackend(String uid) async {
+    final url = Uri.parse('http://10.0.2.2:8081/usuarios'); // Puerto 8081
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'firebaseUid': uid,
+          'nombre': nameController.text.trim(),
+          'nickname': nicknameController.text.trim(),
+          'localidad': locationController.text.trim(),
+          'email': emailController.text.trim(),
+          'fotoPerfil': 'https://via.placeholder.com/150',
+          'memberSince': DateTime.now().year.toString(),
+          'encountersCount': 0
+        }),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print("Error en Backend: ${response.body}"); // Esto te dirá si Java rechazó el JSON
+      }
+    } catch (e) {
+      print("Error de conexión: $e"); // Esto te dirá si la IP/Puerto están mal
+    }
+  }
+
+// 2. Espera a que el backend termine antes de navegar
   void register() async {
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      if (mounted) Navigator.pushNamed(context, "/welcome");
+
+      if (userCredential.user != null) {
+        // IMPORTANTE: Ponemos el await para que no navegue hasta que MySQL confirme
+        await _saveInBackend(userCredential.user!.uid);
+
+        if (mounted) {
+          // Usamos pushReplacementNamed para que no pueda volver atrás al registro
+          Navigator.pushReplacementNamed(context, "/perfil");
+        }
+      }
     } on FirebaseAuthException catch (e) {
       setState(() {
-        if (e.code == 'email-already-in-use') {
-          errorMessage = "El correo ya está registrado";
-        } else {
-          errorMessage = "Error al crear la cuenta";
-        }
+        errorMessage = e.message ?? "Error en Firebase";
       });
     }
   }
