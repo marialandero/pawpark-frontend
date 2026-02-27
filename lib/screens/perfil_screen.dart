@@ -33,15 +33,13 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: pawBlue,
-        elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacementNamed(context, "/login");
+            onPressed: () {
+              showSignOutConfirmation(color);
             },
-            icon: Icon(Icons.logout, color: Colors.white),
+            icon: Icon(Icons.logout, color: color.onPrimary),
           ),
         ],
       ),
@@ -51,18 +49,22 @@ class _PerfilScreenState extends State<PerfilScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text("Error: ${snapshot.error}"),
-                IconButton(onPressed: () async{
-                 await FirebaseAuth.instance.signOut();
-                 Navigator.pushNamed(context, "/login");
-                },
-                    icon: Icon(Icons.sign_language_outlined))
-              ],
-            ));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text("Error: ${snapshot.error}"),
+                  IconButton(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pushNamed(context, "/login");
+                    },
+                    icon: Icon(Icons.sign_language_outlined),
+                  ),
+                ],
+              ),
+            );
           }
 
           final user = snapshot.data!;
@@ -72,7 +74,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 _buildHeader(user, pawBlue),
                 SizedBox(height: 60),
                 _buildStats(user, pawBlue, parkRed, color),
-                _buildMascotasSection(user, pawBlue, parkRed, color)
+                _buildMascotasSection(user, pawBlue, parkRed, color),
               ],
             ),
           );
@@ -108,10 +110,13 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  Widget _buildStats(Usuario user, Color pawBlue, Color parkRed, ColorScheme color) {
+  Widget _buildStats(Usuario user, Color pawBlue, Color parkRed, ColorScheme color,) {
     return Column(
       children: [
-        Text(user.nombre, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(
+          user.nombre,
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -119,7 +124,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
             Text(user.localidad, style: TextStyle(color: Colors.grey)),
           ],
         ),
-        Text("Miembro desde ${user.memberSince}", style: TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(
+          "Miembro desde ${user.memberSince}",
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
         SizedBox(height: 20),
         // Fila de estadísticas (Mascotas, Amigos, Encuentros)
         Row(
@@ -127,7 +135,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
           children: [
             _statItem(user.mascotas.length.toString(), "Mascotas", pawBlue),
             _statItem("24", "Amigos", parkRed), // Dato estático para el MVP
-            _statItem(user.encountersCount.toString(), "Encuentros", color.tertiary ),
+            _statItem(
+              user.encountersCount.toString(),
+              "Encuentros",
+              color.tertiary,
+            ),
           ],
         ),
       ],
@@ -137,13 +149,20 @@ class _PerfilScreenState extends State<PerfilScreen> {
   Widget _statItem(String value, String label, Color color) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
         Text(label, style: TextStyle(color: Colors.grey, fontSize: 12)),
       ],
     );
   }
 
-  Widget _buildMascotasSection(Usuario user, Color pawBlue, Color parkRed, ColorScheme color) {
+  Widget _buildMascotasSection(Usuario user, Color pawBlue, Color parkRed, ColorScheme color,) {
     return Padding(
       padding: EdgeInsets.all(20),
       child: Column(
@@ -160,7 +179,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 onPressed: () async {
                   print("Botón presionado, navegando a /add-mascota...");
                   // Navegamos y esperamos a que la mascota se guarde y la pantalla se cierre
-                  final mascotaGuardada = await Navigator.pushNamed(context, "/add-mascota");
+                  final mascotaGuardada = await Navigator.pushNamed(
+                    context,
+                    "/add-mascota",
+                  );
 
                   // Si al volver el el valor es true, refrescamos los datos del servidor
                   if (mascotaGuardada == true) {
@@ -173,17 +195,21 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 icon: Icon(Icons.add, size: 18),
                 label: Text("Añadir"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: color.secondary,
+                  backgroundColor: Colors.cyan,
                   foregroundColor: color.onPrimary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
           ),
           SizedBox(height: 15),
           ListView.builder(
-            shrinkWrap: true, // Importante para que funcione dentro de un Column
-            physics: NeverScrollableScrollPhysics(), // El scroll lo maneja el SingleChildScrollView
+            shrinkWrap: true,
+            // Importante para que funcione dentro de un Column
+            physics: NeverScrollableScrollPhysics(),
+            // El scroll lo maneja el SingleChildScrollView
             itemCount: user.mascotas.length,
             itemBuilder: (context, index) {
               final mascota = user.mascotas[index];
@@ -204,11 +230,16 @@ class _PerfilScreenState extends State<PerfilScreen> {
           borderRadius: BorderRadius.circular(10),
           child: Image.network(
             mascota['foto'],
-            width: 60, height: 60, fit: BoxFit.cover,
+            width: 60,
+            height: 60,
+            fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Icon(Icons.pets),
           ),
         ),
-        title: Text(mascota['nombre'], style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          mascota['nombre'],
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text("${mascota['raza']} • ${mascota['edad']} años"),
         trailing: Container(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -227,18 +258,56 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   Color obtenerColorPorComportamiento(String nombreComportamiento) {
     if (nombreComportamiento == 'SOCIABLE') {
-      return Color(0xff42ad60);
+      return Color(0xff61b17a);
     }
-    if (nombreComportamiento == 'AGRESIVO') {
+    if (nombreComportamiento == 'TRANQUILO') {
+      return Color(0xff6197b7);
+    }
+    if (nombreComportamiento == 'REACTIVO') {
       return Color(0xffb2173a);
     }
     if (nombreComportamiento == 'JUGUETON') {
       return Color(0xffbb1dc5);
     }
-
-    if (nombreComportamiento == 'TRANQUILO') {
-      return Color(0xff2783ce);
+    if (nombreComportamiento == 'ENERGETICO') {
+      return Color(0xffebb55d);
+    }
+    if (nombreComportamiento == 'CARIÑOSO') {
+      return Color(0xfff27070);
+    }
+    if (nombreComportamiento == 'AVENTURERO') {
+      return Color(0xff239a86);
     }
     return Colors.grey;
+  }
+
+  void showSignOutConfirmation(ColorScheme color) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+        title: Text("Cerrar sesión"),
+        content: Text("¿Seguro que quieres salir?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("CANCELAR", style: TextStyle(color: color.surfaceTint)),
+          ),
+          TextButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              // volvemos al login
+              Navigator.pushNamed(context, "/login");
+            },
+            child: Text(
+              "CERRAR SESIÓN",
+              style: TextStyle(
+                color: color.onErrorContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

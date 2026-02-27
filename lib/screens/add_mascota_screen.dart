@@ -42,8 +42,7 @@ class _AddMascotaScreenState extends State<AddMascotaScreen> {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        if (mounted) Navigator.pop(context, true); // Éxito
-      } else {
+        Navigator.pop(context, true);
         print("Error backend: ${response.body}");
       }
     } catch (e) {
@@ -89,7 +88,7 @@ class _AddMascotaScreenState extends State<AddMascotaScreen> {
               DropdownButtonFormField<String>(
                 value: comportamiento,
                 decoration: InputDecoration(labelText: "Comportamiento", prefixIcon: Icon(Icons.mood)),
-                items: ["SOCIABLE", "JUGUETON", "AGRESIVO", "TRANQUILO"].map((String value) {
+                items: ["SOCIABLE", "TRANQUILO", "REACTIVO", "JUGUETON", "ENERGETICO", "CARIÑOSO", "AVENTURERO"].map((String value) {
                   return DropdownMenuItem<String>(value: value, child: Text(value));
                 }).toList(),
                 onChanged: (newValue) => setState(() => comportamiento = newValue!),

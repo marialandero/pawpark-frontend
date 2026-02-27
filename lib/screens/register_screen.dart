@@ -256,14 +256,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        print("Error en Backend: ${response.body}"); // Esto te dirá si Java rechazó el JSON
+        print("Error en Backend: ${response.body}"); // Para saber si Java rechazó el JSON
       }
     } catch (e) {
-      print("Error de conexión: $e"); // Esto te dirá si la IP/Puerto están mal
+      print("Error de conexión: $e"); // Para saber si la IP/Puerto están mal
     }
   }
 
-// 2. Espera a que el backend termine antes de navegar
   void register() async {
     try {
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -274,11 +273,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (userCredential.user != null) {
         // IMPORTANTE: Ponemos el await para que no navegue hasta que MySQL confirme
         await _saveInBackend(userCredential.user!.uid);
-
-        if (mounted) {
-          // Usamos pushReplacementNamed para que no pueda volver atrás al registro
-          Navigator.pushReplacementNamed(context, "/perfil");
-        }
+          Navigator.pushNamed(context, "/perfil");
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
