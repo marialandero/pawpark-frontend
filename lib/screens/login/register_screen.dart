@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
+import 'package:pawpark_frontend/providers/usuario_provider.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -236,7 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // 1. Asegúrate de capturar errores en la petición HTTP
+  // Tenemos que asegurarnos de capturar errores en la petición HTTP
   Future<void> _saveInBackend(String uid) async {
     final url = Uri.parse('http://10.0.2.2:8081/usuarios'); // Puerto 8081
     try {
@@ -249,7 +251,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'nickname': nicknameController.text.trim(),
           'localidad': locationController.text.trim(),
           'email': emailController.text.trim(),
-          'fotoPerfil': 'https://via.placeholder.com/150',
+          'fotoPerfil': 'assets/images/person_default.png',
           'memberSince': DateTime.now().year.toString(),
           'encountersCount': 0
         }),
@@ -273,7 +275,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (userCredential.user != null) {
         // IMPORTANTE: Ponemos el await para que no navegue hasta que MySQL confirme
         await _saveInBackend(userCredential.user!.uid);
-          Navigator.pushNamed(context, "/perfil");
+
+        if (mounted) {
+          final userProvider = Provider.of<UsuarioProvider>(context, listen: false);
+          await userProvider.cargarUsuario(userCredential.user!.uid);
+          // Usamos pushNamedAndRemoveUntil para que no pueda volver atrás al formulario
+          Navigator.pushNamedAndRemoveUntil(context, "/perfil", (route) => false);
+        }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {

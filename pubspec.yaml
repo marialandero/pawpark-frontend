@@ -40,6 +40,8 @@ dependencies:
   google_fonts: ^8.0.2
   email_validator: ^3.0.0
   http: ^1.6.0
+  google_maps_flutter: ^2.14.2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +69,14 @@ flutter:
   assets:
     - assets/images/logo_pawpark.png
     - assets/images/pawpark_logo.png
+    - assets/images/dog_default.png
+    - assets/images/person_default.png
+    - assets/images/mapa_falso.png
+    - assets/images/pawpark_app.png
+    - assets/images/paw_park.png
+    - assets/images/prueba_logo.png
+    - assets/images/logo.png
+    - assets/images/logo_paw_park.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

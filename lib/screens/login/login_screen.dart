@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:pawpark_frontend/providers/usuario_provider.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -45,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 30),
 
-                // CONTENEDOR DEL FORMULARIO
+                // Contenedor del formulario
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(25),
@@ -186,14 +188,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void login() async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      // Autenticamos con Firebase
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      if (mounted) Navigator.pushNamed(context, "/perfil");
+      if (userCredential.user != null && mounted) {
+        // Cargamos los datos del backend en el Provider
+        await context.read<UsuarioProvider>().cargarUsuario(userCredential.user!.uid);
+        // Navegamos limpiando el historial para que no se pueda pulsar el botón de volver atrás
+        Navigator.pushNamedAndRemoveUntil(context, "/perfil", (route) => false);
+      }
     } on FirebaseAuthException catch (e) {
       setState(() {
-        errorMessage = "Credenciales incorrectas";
+        if (e.code == 'user-not-found' || e.code == 'wrong-password'){
+          errorMessage = "Credenciales incorrectas";
+        } else {
+          errorMessage = "Error al iniciar sesión. Inténtalo de nuevo.";
+        }
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error de conexión con el servidor";
       });
     }
   }

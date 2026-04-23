@@ -17,4 +17,34 @@ class UsuarioService {
       throw Exception("Error al cargar el perfil");
     }
   }
+
+  static Future<Usuario?> actualizarPerfil(String uid, Map<String, dynamic> datos) async {
+    final url = Uri.parse("$baseUrl/firebase/$uid");
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(datos)
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Usuario.fromJson(jsonDecode(response.body));
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<List<Usuario>> fetchTodos() async {
+    final response = await http.get(Uri.parse("$baseUrl"));
+
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      return data.map((e) => Usuario.fromJson(e)).toList();
+    } else {
+      throw Exception("Error al cargar usuarios");
+    }
+  }
 }
