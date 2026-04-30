@@ -1,67 +1,69 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../api/post_model.dart';
 import '../api/post_service.dart';
 
 class PostProvider extends ChangeNotifier {
-  List<Post> _posts = [];
+
+  // La lista solo aceptará objetos tipo Post
+  List<Post> posts = [];
   bool isLoading = false;
 
-  List<Post> get posts => _posts;
-
-  /// 🔥 CARGAR FEED
   Future<void> cargarFeed() async {
     isLoading = true;
     notifyListeners();
 
     try {
-      _posts = await PostService.fetchFeed();
+      // Recibimos la lista ya mapeada desde el service
+      posts = await PostService.fetchFeed();
     } catch (e) {
-      debugPrint("Error cargando feed: $e");
+      debugPrint("Error feed: $e");
     }
 
     isLoading = false;
     notifyListeners();
   }
 
-  /// ❤️ LIKE LOCAL (sin backend aún)
-  void toggleLike(Post post) {
-    post.liked = !post.liked;
-    post.liked ? post.likes++ : post.likes--;
-
-    notifyListeners();
-  }
-
-  /// ➕ CREAR POST
   Future<bool> crearPost({
+    required File imagen,
     required String uid,
-    required String imagenUrl,
-    required String? descripcion,
+    required String descripcion,
     required List<int> mascotasIds,
   }) async {
-    final payload = {
-      "firebaseUidAutor": uid,
-      "rutaImagen": imagenUrl,
-      "descripcion": descripcion ?? "",
-      "mascotasIds": mascotasIds,
-    };
 
     isLoading = true;
     notifyListeners();
 
     try {
-      final success = await PostService.crearPost(payload);
+      /// 1. subes imagen
+      final imageUrl = await PostService.uploadImage(imagen);
+
+      /// 2. creas post
+      final success = await PostService.crearPost({
+        "firebaseUidAutor": uid,
+        "rutaImagen": imageUrl,
+        "descripcion": descripcion,
+        "mascotasIds": mascotasIds,
+      });
 
       if (success) {
-        await cargarFeed(); // 🔥 refresca feed automáticamente
+        await cargarFeed();
       }
 
       return success;
+
     } catch (e) {
-      debugPrint("Error creando post: $e");
+      debugPrint("Error crear post: $e");
       return false;
     } finally {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void toggleLikeLocal(Post post) {
+    post.liked = !post.liked;
+    post.liked ? post.likes++ : post.likes--;
+    notifyListeners();
   }
 }

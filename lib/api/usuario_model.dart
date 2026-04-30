@@ -35,9 +35,7 @@ class Usuario {
       nickname: json['nickname'] ?? '',
       localidad: json['localidad'] ?? '',
         descripcion: json['descripcion'] ?? '',
-      fotoPerfil: (json['fotoPerfil'] == null || json['fotoPerfil'].isEmpty)
-            ? 'assets/images/default_user.png'
-            : json['fotoPerfil'],
+        fotoPerfil: json['fotoPerfil'] ?? '',
       memberSince: json['memberSince'] ?? '2026',
       encountersCount: json['encountersCount'] ?? 0,
       mascotas: (json['mascotas'] as List?)

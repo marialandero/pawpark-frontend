@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:pawpark_frontend/providers/post_provider.dart';
 import 'package:pawpark_frontend/providers/quedada_provider.dart';
 import 'package:pawpark_frontend/providers/usuario_provider.dart';
+import 'package:pawpark_frontend/screens/feed/crear_post_screen.dart';
 import 'package:pawpark_frontend/screens/feed/feed_screen.dart';
+import 'package:pawpark_frontend/screens/feed/search_screen.dart';
 import 'package:pawpark_frontend/screens/mapas/mapas_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/form_editar_perfil_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/form_mascota_screen.dart';
@@ -37,7 +40,8 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
-        ChangeNotifierProvider(create: (_) => QuedadaProvider())
+        ChangeNotifierProvider(create: (_) => QuedadaProvider()),
+        ChangeNotifierProvider(create: (_) => PostProvider())
       ],
       child: const MyApp(),
     ),
@@ -72,7 +76,9 @@ class MyApp extends StatelessWidget {
         "/feed": (context) => FeedScreen(),
         "/quedadas": (context) => QuedadasScreen(),
         "/form-quedada": (context) => FormQuedadaScreen(),
-        '/detalle-quedada': (context) => DetalleQuedadaScreen()
+        "/detalle-quedada": (context) => DetalleQuedadaScreen(),
+        "/crear-post": (context) => CrearPostScreen(),
+        "/search": (context) => SearchScreen()
       },
     );
   }

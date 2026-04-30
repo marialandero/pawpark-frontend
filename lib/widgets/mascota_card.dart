@@ -14,6 +14,18 @@ class MascotaCard extends StatefulWidget {
 class _MascotaCardState extends State<MascotaCard> {
   bool isFavorite = false;
 
+  static const String baseUrl = "http://10.0.2.2:8081/uploads/";
+  String getImageUrl(String? foto) {
+    if (foto == null || foto.isEmpty) {
+      return "${baseUrl}dog_default.png";
+    }
+
+    // Si ya viene como URL completa
+    if (foto.startsWith("http")) return foto;
+
+    return "$baseUrl$foto";
+  }
+
   @override
   Widget build(BuildContext context) {
     final pawBlue = Theme.of(context).colorScheme.primary;
@@ -54,11 +66,19 @@ class _MascotaCardState extends State<MascotaCard> {
                         tag: 'foto_${widget.mascota.id}',
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(15),
-                          child: widget.mascota.fotoPerfilMascota.startsWith('assets/')
-                              ? Image.asset(widget.mascota.fotoPerfilMascota, width: 95, height: 95, fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Icon(Icons.pets, size: 40))
-                              : Image.network(widget.mascota.fotoPerfilMascota, width: 95, height: 95, fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Icon(Icons.pets, size: 40)),
+                          child: Image.network(
+                            getImageUrl(widget.mascota.fotoPerfilMascota),
+                            width: 95,
+                            height: 95,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) {
+                              return Image.network(
+                                "${baseUrl}dog_default.png",
+                                width: 95,
+                                height: 95,
+                              );
+                            },
+                          )
                         ),
                       ),
 
@@ -143,35 +163,35 @@ class _MascotaCardState extends State<MascotaCard> {
               ),
             ),
         
-            // Barra inferior (estadísticas)
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              decoration: BoxDecoration(
-                color: color.onPrimary,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-                border: Border(top: BorderSide(color: Colors.grey[200]!)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF2D3142)),
-                      SizedBox(width: 5),
-                      Text("Últimos parques", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                  Container(width: 1, height: 15, color: Colors.grey[300]),
-                  Row(
-                    children: [
-                      Icon(Icons.favorite_border, size: 14, color: Color(0xFF2D3142)),
-                      SizedBox(width: 5),
-                      Text("Amigos (0)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            // // Barra inferior (estadísticas)
+            // Container(
+            //   padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            //   decoration: BoxDecoration(
+            //     color: color.onPrimary,
+            //     borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+            //     border: Border(top: BorderSide(color: Colors.grey[200]!)),
+            //   ),
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceAround,
+            //     children: [
+            //       Row(
+            //         children: [
+            //           Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF2D3142)),
+            //           SizedBox(width: 5),
+            //           Text("Últimos parques", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+            //         ],
+            //       ),
+            //       Container(width: 1, height: 15, color: Colors.grey[300]),
+            //       Row(
+            //         children: [
+            //           Icon(Icons.favorite_border, size: 14, color: Color(0xFF2D3142)),
+            //           SizedBox(width: 5),
+            //           Text("Amigos (0)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+            //         ],
+            //       ),
+            //     ],
+            //   ),
+            // ),
           ],
         ),
       ),

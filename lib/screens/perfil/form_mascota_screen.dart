@@ -93,9 +93,9 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
     final data = {
       'nombre': nameController.text.trim(),
       'raza': _razaSeleccionadaParaBackend,
-      'edad': int.parse(edadController.text.trim()),
-      'comportamiento': selectedTags,
-      'fotoPerfilMascota': 'assets/images/dog_default.png',
+      'edad': int.tryParse(edadController.text.trim()) ?? 0,
+      'comportamientos': selectedTags,
+      'fotoPerfilMascota': null,
       'duenoFirebaseUid': uid,
     };
 

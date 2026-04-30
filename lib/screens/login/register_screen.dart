@@ -251,7 +251,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'nickname': nicknameController.text.trim(),
           'localidad': locationController.text.trim(),
           'email': emailController.text.trim(),
-          'fotoPerfil': 'assets/images/person_default.png',
+          'fotoPerfil': null,
           'memberSince': DateTime.now().year.toString(),
           'encountersCount': 0
         }),

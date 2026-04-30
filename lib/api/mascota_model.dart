@@ -28,9 +28,7 @@ class Mascota {
       nombre: json['nombre'] ?? '',
       edad: json['edad'] ?? 0,
       descripcion: json['descripcion'] ?? '',
-      fotoPerfilMascota: (json['fotoPerfilMascota'] == null || json['fotoPerfilMascota'].isEmpty)
-          ? 'assets/images/default_dog.png'
-          : json['fotoPerfilMascota'],
+      fotoPerfilMascota: json['fotoPerfilMascota'] ?? '',
       raza: json['raza'] ?? 'MESTIZO',
       comportamientos: List<String>.from(json['comportamientos'] ?? []),
       duenoFirebaseUid: json['duenoFirebaseUid'] ?? '',

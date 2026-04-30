@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'usuario_model.dart';
 
@@ -46,5 +47,37 @@ class UsuarioService {
     } else {
       throw Exception("Error al cargar usuarios");
     }
+  }
+
+  static Future<List<Usuario>> buscarUsuarios(String query) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/buscar?query=$query"),
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+
+      return data.map((e) => Usuario.fromJson(e)).toList();
+    } else {
+      throw Exception("Error buscando usuarios");
+    }
+  }
+
+  static Future<String?> uploadFotoPerfil(String uid, File image) async {
+    final uri = Uri.parse("$baseUrl/upload-foto/$uid");
+
+    var request = http.MultipartRequest("POST", uri);
+
+    request.files.add(
+      await http.MultipartFile.fromPath("file", image.path),
+    );
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      return await response.stream.bytesToString();
+    }
+
+    return null;
   }
 }

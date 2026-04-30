@@ -17,6 +17,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
   /// Ya no necesitamos la variable futureUsuario ni inicializar la descarga
   /// en un initState, ya que el AuthWrapper o el Provider se encargan de ello
 
+  // Base URL para imágenes en servidor local
+  final String serverUploadsUrl = "http://10.0.2.2:8081/uploads/";
+
   @override
   Widget build(BuildContext context) {
 
@@ -137,6 +140,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     ),
                   ),
 
+                  // Avatar
                   Positioned(
                     bottom: -60,
                     child: Container(
@@ -150,11 +154,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         child: SizedBox(
                           width: 130,
                           height: 130,
-                          child: (user.fotoPerfil != null && user.fotoPerfil.isNotEmpty)
-                              ? (user.fotoPerfil.startsWith('assets/')
-                                    ? Image.asset(user.fotoPerfil, fit: BoxFit.cover,)
-                                    : Image.network(user.fotoPerfil, fit: BoxFit.cover))
-                              : Image.asset('assets/images/person_default.png', fit: BoxFit.cover),
+                          child: _buildAvatarImage(user.fotoPerfil),
                         ),
                       ),
                     ),
@@ -275,6 +275,27 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
+  /// 🖼️ Lógica para decidir qué imagen mostrar
+  Widget _buildAvatarImage(String? foto) {
+    // Si no hay foto, pedimos la default al backend
+    if (foto == null || foto.isEmpty) {
+      return Image.network("$serverUploadsUrl/person_default.png", fit: BoxFit.cover);
+    }
+
+    // Si la foto es una URL completa (Google/Firebase)
+    if (foto.startsWith('http')) {
+      return Image.network(foto, fit: BoxFit.cover);
+    }
+
+    // Si es una ruta relativa guardada en nuestro servidor
+    return Image.network(
+      "$serverUploadsUrl$foto",
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stack) =>
+          Image.network("$serverUploadsUrl/person_default.png", fit: BoxFit.cover),
+    );
+  }
+
   Widget _stat(String value, String label, Color color) {
     return Column(
       children: [
@@ -288,6 +309,18 @@ class _PerfilScreenState extends State<PerfilScreen> {
         ),
         Text(label, style: TextStyle(color: Colors.grey)),
       ],
+    );
+  }
+
+  Widget _buildDefaultImage() {
+    return Image.network(
+      "http://10.0.2.2:8081/uploads/person_default.png",
+      fit: BoxFit.cover,
+      // Si incluso el servidor falla, tenemos un icono de respaldo final
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: Colors.grey[300],
+        child: const Icon(Icons.person, size: 50, color: Colors.white),
+      ),
     );
   }
 
@@ -310,7 +343,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
               // Se limpia el Provider
               context.read<UsuarioProvider>().limpiarUsuario();
               // Volvemos al login
-              Navigator.pushNamed(context, "/login");
+              Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
             },
             child: Text(
               "CERRAR SESIÓN",

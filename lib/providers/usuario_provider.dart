@@ -31,6 +31,15 @@ class UsuarioProvider with ChangeNotifier {
     }
   }
 
+  Future<List<Usuario>> buscarUsuarios(String query) async {
+    try {
+      return await UsuarioService.buscarUsuarios(query);
+    } catch (e) {
+      debugPrint("Error buscando usuarios: $e");
+      return [];
+    }
+  }
+
   // Limpia el rastro del usuario anterior
   void limpiarUsuario() {
     _usuario = null;
