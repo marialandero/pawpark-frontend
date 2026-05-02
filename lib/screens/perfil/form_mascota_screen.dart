@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:pawpark_frontend/api/mascota_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
+import '../../utils/image_helper.dart';
 
 class FormMascotaScreen extends StatefulWidget {
   const FormMascotaScreen({super.key});
@@ -17,11 +20,16 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final edadController = TextEditingController();
+
   List<String> selectedTags = []; // Lista para almacenar varios comportamientos
 
   String? _razaSeleccionadaParaBackend;
   String comportamiento = "SOCIABLE"; // Valor por defecto
+
   bool isSaving = false;
+
+  File? imagenSeleccionada;
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> _comportamientos = [
     "SOCIABLE", "TRANQUILO", "REACTIVO", "JUGUETON", "ENERGETICO", "CARIÑOSO", "AVENTURERO",
@@ -47,6 +55,17 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
     nameController.dispose();
     edadController.dispose();
     super.dispose();
+  }
+
+  // Función para elegir imagen
+  Future<void> _seleccionarImagen() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        imagenSeleccionada = File(pickedFile.path);
+      });
+    }
   }
 
   String _formatearTextoLegible(String text) {
@@ -145,6 +164,21 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: GestureDetector(
+                  onTap: _seleccionarImagen,
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.grey[200],
+                    backgroundImage: imagenSeleccionada != null
+                        ? FileImage(imagenSeleccionada!)
+                        : null,
+                    child: imagenSeleccionada == null
+                    ? Icon(Icons.add_a_photo, size: 30)
+                    : null,
+                  ),
+                ),
+              ),
               Text("Cuéntanos sobre tu peludo",
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: pawBlue)),
               SizedBox(height: 25),

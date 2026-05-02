@@ -1,6 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../api/mascota_model.dart';
 import '../api/mascota_service.dart';
+import '../api/post_model.dart';
+import '../api/post_service.dart';
 import '../api/usuario_model.dart';
 import '../api/usuario_service.dart';
 
@@ -77,5 +80,58 @@ class UsuarioProvider with ChangeNotifier {
   Future<void> cargarUsuarios() async {
     _usuarios = await UsuarioService.fetchTodos(); // tendrás que crear esto
     notifyListeners();
+  }
+
+  // Actualizar foto mascota (backend + estado)
+  Future<void> actualizarFotoMascota(
+      int mascotaId,
+      String nuevaFoto,
+      ) async {
+    try {
+      final Mascota? mascotaActualizada =
+      await MascotaService.actualizarFotoMascota(
+        mascotaId,
+        nuevaFoto,
+      );
+
+      if (mascotaActualizada == null) return;
+
+      if (_usuario == null) return;
+
+      final index = _usuario!.mascotas.indexWhere(
+            (m) => m.id == mascotaId,
+      );
+
+      if (index == -1) return;
+
+      // 🧠 reemplazo seguro del objeto
+      _usuario!.mascotas[index] = mascotaActualizada;
+
+      notifyListeners(); // 🔥 refresca UI global
+    } catch (e) {
+      print("Error provider actualizarFotoMascota: $e");
+    }
+  }
+
+  Future<void> recargarUsuario() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final usuario = await UsuarioService.fetchPerfil(uid);
+
+    _usuario = usuario;
+    notifyListeners();
+  }
+
+  List<Post> _postsMascota = [];
+  List<Post> get postsMascota => _postsMascota;
+
+  Future<void> cargarPostsMascota(int mascotaId) async {
+    try {
+      _postsMascota = await PostService.fetchPostsByMascota(mascotaId);
+      notifyListeners();
+    } catch (e) {
+      print("Error cargando posts mascota: $e");
+    }
   }
 }

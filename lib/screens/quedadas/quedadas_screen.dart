@@ -124,7 +124,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
                         else
                           ...explorar.map((q) => Padding(
                             padding: EdgeInsets.only(bottom: 15),
-                            child: _buildExplorarCard(context, quedada: q, color: color.onTertiaryFixedVariant),
+                            child: _buildExplorarCard(context, quedada: q, color: Colors.orange.shade700),
                           )),
                       ],
                     );
@@ -178,7 +178,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,9 +197,9 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10)],
       ),
       child: Column(
         children: [
@@ -210,7 +210,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
               backgroundColor: color.withOpacity(0.1),
               child: Icon(Icons.pets, color: color),
             ),
-            title: Text(quedada.titulo, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Didact Gothic')),
+            title: Text(quedada.titulo, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Didact Gothic', color: Colors.orange.shade700)),
             subtitle: Text("${quedada.lugarNombre} • ${quedada.perrosAsistentes.length} perros"),
             trailing: Text(hora, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 18)),
           ),
@@ -219,7 +219,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Organiza: ${quedada.creador?.nombre ?? 'Usuario'}", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text("Organizador: ${quedada.creador?.nombre ?? 'Usuario'}", style: TextStyle(color: Colors.grey, fontSize: 12)),
                 ElevatedButton(
                   onPressed: () {
                     // MODIFICADO: Ahora cargamos los datos en el Provider antes de navegar

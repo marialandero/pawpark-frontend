@@ -4,10 +4,13 @@ import 'dart:convert';
 import 'mascota_model.dart';
 
 class MascotaService {
-  static const String baseUrl = 'http://10.0.2.2:8081/mascotas';
+  // BASE URL SIN /mascotas
+  static const String baseUrl = 'http://10.0.2.2:8081';
 
+  // Actualizar descripción
   static Future<Mascota?> updateDescripcion(int mascotaId, String nuevaDesc) async {
-    final url = Uri.parse('http://10.0.2.2:8081/mascotas/$mascotaId/descripcion');
+    final url = Uri.parse('$baseUrl/mascotas/$mascotaId/descripcion');
+
     try {
       final response = await http.put(
         url,
@@ -19,9 +22,10 @@ class MascotaService {
         // Retornamos el objeto que nos manda el backend
         return Mascota.fromJson(jsonDecode(response.body));
       }
+      print("Error backend descripcion: ${response.body}");
       return null;
     } catch (e) {
-      debugPrint("Error en MascotaService: $e");
+      debugPrint("Error en updateDescripcion de MascotaService: $e");
       return null;
     }
   }
@@ -38,6 +42,32 @@ class MascotaService {
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       return false;
+    }
+  }
+
+  // Actualizar solo foto
+  static Future<Mascota?> actualizarFotoMascota(
+      int id,
+      String fotoPerfilMascota,
+      ) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/mascotas/$id/foto"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "fotoPerfilMascota": fotoPerfilMascota,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return Mascota.fromJson(jsonDecode(response.body));
+      } else {
+        print("Error backend: ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("Error service mascota: $e");
+      return null;
     }
   }
 }

@@ -5,6 +5,7 @@ import '../../api/usuario_model.dart';
 import '../../providers/usuario_provider.dart';
 import '../../widgets/bottom_bar.dart';
 import '../../widgets/mascota_card.dart';
+import '../../utils/image_helper.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -17,8 +18,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
   /// Ya no necesitamos la variable futureUsuario ni inicializar la descarga
   /// en un initState, ya que el AuthWrapper o el Provider se encargan de ello
 
-  // Base URL para imágenes en servidor local
-  final String serverUploadsUrl = "http://10.0.2.2:8081/uploads/";
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +153,15 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         child: SizedBox(
                           width: 130,
                           height: 130,
-                          child: _buildAvatarImage(user.fotoPerfil),
+                          child: Image.network(
+                            ImageHelper.user(user.fotoPerfil),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                            Image.network(
+                              ImageHelper.user(null),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -174,10 +181,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ],
               ),
 
-              Text(
-                "Miembro desde ${user.memberSince}",
-                style: TextStyle(color: color.outline, fontSize: 13),
-              ),
+              // Text(
+              //   "Miembro desde ${user.memberSince}",
+              //   style: TextStyle(color: color.outline, fontSize: 13),
+              // ),
 
               if (user.descripcion.isNotEmpty)
                 Padding(
@@ -275,27 +282,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  /// 🖼️ Lógica para decidir qué imagen mostrar
-  Widget _buildAvatarImage(String? foto) {
-    // Si no hay foto, pedimos la default al backend
-    if (foto == null || foto.isEmpty) {
-      return Image.network("$serverUploadsUrl/person_default.png", fit: BoxFit.cover);
-    }
-
-    // Si la foto es una URL completa (Google/Firebase)
-    if (foto.startsWith('http')) {
-      return Image.network(foto, fit: BoxFit.cover);
-    }
-
-    // Si es una ruta relativa guardada en nuestro servidor
-    return Image.network(
-      "$serverUploadsUrl$foto",
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stack) =>
-          Image.network("$serverUploadsUrl/person_default.png", fit: BoxFit.cover),
-    );
-  }
-
   Widget _stat(String value, String label, Color color) {
     return Column(
       children: [
@@ -309,18 +295,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
         ),
         Text(label, style: TextStyle(color: Colors.grey)),
       ],
-    );
-  }
-
-  Widget _buildDefaultImage() {
-    return Image.network(
-      "http://10.0.2.2:8081/uploads/person_default.png",
-      fit: BoxFit.cover,
-      // Si incluso el servidor falla, tenemos un icono de respaldo final
-      errorBuilder: (context, error, stackTrace) => Container(
-        color: Colors.grey[300],
-        child: const Icon(Icons.person, size: 50, color: Colors.white),
-      ),
     );
   }
 

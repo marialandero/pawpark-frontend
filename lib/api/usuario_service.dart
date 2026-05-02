@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'mascota_model.dart';
 import 'usuario_model.dart';
 
 class UsuarioService {
@@ -75,7 +76,27 @@ class UsuarioService {
     final response = await request.send();
 
     if (response.statusCode == 200) {
-      return await response.stream.bytesToString();
+      final resp = await response.stream.bytesToString();
+      return resp.replaceAll('"', '');
+    }
+
+    return null;
+  }
+
+  static Future<Mascota?> actualizarFotoMascota(
+      int id,
+      String foto,
+      ) async {
+    final response = await http.put(
+      Uri.parse("http://10.0.2.2:8081/mascotas/$id"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "fotoPerfilMascota": foto,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return Mascota.fromJson(jsonDecode(response.body));
     }
 
     return null;

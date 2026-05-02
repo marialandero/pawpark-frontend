@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api/mascota_model.dart';
+import '../utils/image_helper.dart';
 
 class MascotaCard extends StatefulWidget {
   final Mascota mascota;
@@ -13,18 +14,6 @@ class MascotaCard extends StatefulWidget {
 
 class _MascotaCardState extends State<MascotaCard> {
   bool isFavorite = false;
-
-  static const String baseUrl = "http://10.0.2.2:8081/uploads/";
-  String getImageUrl(String? foto) {
-    if (foto == null || foto.isEmpty) {
-      return "${baseUrl}dog_default.png";
-    }
-
-    // Si ya viene como URL completa
-    if (foto.startsWith("http")) return foto;
-
-    return "$baseUrl$foto";
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,13 +56,13 @@ class _MascotaCardState extends State<MascotaCard> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(15),
                           child: Image.network(
-                            getImageUrl(widget.mascota.fotoPerfilMascota),
+                            ImageHelper.pet(widget.mascota.fotoPerfilMascota),
                             width: 95,
                             height: 95,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) {
                               return Image.network(
-                                "${baseUrl}dog_default.png",
+                                ImageHelper.pet(null),
                                 width: 95,
                                 height: 95,
                               );

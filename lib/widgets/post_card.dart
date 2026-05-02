@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pawpark_frontend/api/usuario_service.dart';
 import '../api/post_model.dart';
 import 'avatar_perfil.dart';
+import '../utils/image_helper.dart';
 
 class PostCard extends StatelessWidget {
   final Post post;
@@ -22,7 +23,7 @@ class PostCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -40,7 +41,7 @@ class PostCard extends StatelessWidget {
             contentPadding: EdgeInsets.all(15),
 
             leading: AvatarPerfil(
-              urlImagen: post.autorFotoPerfil, // Usamos la URL de la foto del autor del post
+              urlImagen: ImageHelper.user(post.autorFotoPerfil), // Usamos la URL de la foto del autor del post
               radio: 22, // Ajustamos el tamaño para la cabecera
             ),
 
@@ -75,7 +76,7 @@ class PostCard extends StatelessWidget {
               "con ${post.mascotasNombres.join(', ')}",
               style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+                color: Colors.blueGrey[700],
               ),
             ),
           ),
@@ -84,9 +85,7 @@ class PostCard extends StatelessWidget {
           AspectRatio(
             aspectRatio: 1,
             child: Image.network(
-              // 10.0.2.2 es la IP para acceder al localhost del PC desde el emulador
-              // /uploads/ es el handler definido en WebConfig.java
-              "http://10.0.2.2:8081/uploads/${post.rutaImagen}",
+              ImageHelper.pet(post.rutaImagen),
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(

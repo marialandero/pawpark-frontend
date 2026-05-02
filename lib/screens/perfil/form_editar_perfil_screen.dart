@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../api/usuario_model.dart';
 import '../../api/usuario_service.dart';
+import '../../utils/image_helper.dart';
 
 class FormEditarPerfilScreen extends StatefulWidget {
   const FormEditarPerfilScreen({super.key});
@@ -19,6 +22,8 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
   final _formKey = GlobalKey<FormState>();
 
   String? fotoActual; // Variable para no perder la imagen
+  File? _imagenSeleccionada;
+  final ImagePicker _picker = ImagePicker();
   late TextEditingController nombreController;
   late TextEditingController ubicacionController;
   late TextEditingController emailController;
@@ -47,6 +52,17 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
         fotoActual = user.fotoPerfil;
       }
     });
+  }
+
+  // Función para seleccionar imagen
+  Future<void> seleccionarImagen() async {
+    final XFile? imagen = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (imagen != null) {
+      setState(() {
+        _imagenSeleccionada = File(imagen.path);
+      });
+    }
   }
 
   @override
@@ -113,34 +129,38 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
           key: _formKey,
           child: Column(
             children: [
-              /// Sección para la foto de perfil, TENGO QUE AÑADIR LA
-              /// FUNCIONALIDAD DE SUBIR FOTO
+              // Sección para la foto de perfil
               buildCard(
                 title: "Foto de perfil",
                 child: Column(
                   children: [
-                    Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundImage: AssetImage(
-                            'assets/images/person_default.png',
+                    GestureDetector(
+                      onTap: seleccionarImagen,
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                              backgroundImage: _imagenSeleccionada != null
+                                  ? FileImage(_imagenSeleccionada!)
+                                  : NetworkImage(
+                                  ImageHelper.user(fotoActual)
+                              ) as ImageProvider,
                           ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: pawBlue,
-                            shape: BoxShape.circle,
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: pawBlue,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.add_a_photo_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.add_a_photo_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     SizedBox(height: 15),
                     Text(
@@ -316,12 +336,19 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
+    String? nombreImagen = fotoActual;
+
+    // Subir imagen si hay nueva
+    if (_imagenSeleccionada != null) {
+      nombreImagen = await UsuarioService.uploadFotoPerfil(uid!, _imagenSeleccionada!);
+    }
+
     // Creamos el mapa de datos primero
     final datosAEnviar = {
       'nombre': nombreController.text.trim(),
       'localidad': ubicacionController.text.trim(),
       'descripcion': bioController.text.trim(),
-      'fotoPerfil': fotoActual ?? 'assets/images/person_default.png',
+      'fotoPerfil': nombreImagen,
       'email': emailController.text.trim(),
       'nickname': emailController.text.split('@')[0],
       'encountersCount': 0,

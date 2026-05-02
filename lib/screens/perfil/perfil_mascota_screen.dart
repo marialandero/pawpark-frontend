@@ -3,9 +3,67 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../api/mascota_model.dart';
 import '../../providers/usuario_provider.dart';
+import '../../utils/image_helper.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
-class PerfilMascotaScreen extends StatelessWidget {
+class PerfilMascotaScreen extends StatefulWidget {
   const PerfilMascotaScreen({super.key});
+
+  @override
+  State<PerfilMascotaScreen> createState() => _PerfilMascotaScreenState();
+}
+
+class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
+
+  File? _imagenSeleccionada; // imagen elegida del dispositivo
+  final ImagePicker _picker = ImagePicker();
+
+  bool _postsCargados = false;
+
+  Future<void> _seleccionarImagen(Mascota mascota) async {
+    final XFile? imagen = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (imagen == null) return;
+
+    setState(() {
+      _imagenSeleccionada = File(imagen.path);
+    });
+
+    await _subirImagen(mascota);
+  }
+
+  Future<void> _subirImagen(Mascota mascota) async {
+    final uri = Uri.parse("http://10.0.2.2:8081/upload");
+
+    final request = http.MultipartRequest("POST", uri);
+
+    request.files.add(
+      await http.MultipartFile.fromPath("file", _imagenSeleccionada!.path),
+    );
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final respStr = await response.stream.bytesToString();
+
+      // Backend devuelve URL completa -> extraemos nombre archivo
+      final fileName = respStr.split("/").last;
+
+      // Se guarda en backend
+      await context.read<UsuarioProvider>().actualizarFotoMascota(mascota.id!, fileName);
+
+      // Recargar usuario COMPLETO
+      await context.read<UsuarioProvider>().recargarUsuario();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Foto actualizada")),
+      );
+    }
+  }
 
   void _mostrarDialogoEdicion(BuildContext context, Mascota mascota) {
     final TextEditingController descController = TextEditingController(text: mascota.descripcion);
@@ -27,7 +85,7 @@ class PerfilMascotaScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("CANCELAR"),
+              child: Text("CANCELAR"),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -43,20 +101,38 @@ class PerfilMascotaScreen extends StatelessWidget {
                 if (exito) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Descripción actualizada correctamente")),
+                    SnackBar(content: Text("Descripción actualizada correctamente")),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Error al conectar con el servidor")),
+                    SnackBar(content: Text("Error al conectar con el servidor")),
                   );
                 }
               },
-              child: const Text("GUARDAR"),
+              child: Text("GUARDAR"),
             ),
           ],
         );
       },
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_postsCargados) return;
+
+    final mascotaArgs =
+    ModalRoute.of(context)!.settings.arguments as Mascota;
+
+    _postsCargados = true;
+
+    Future.microtask(() {
+      context.read<UsuarioProvider>()
+          .cargarPostsMascota(mascotaArgs.id!);
+    });
+
   }
 
   @override
@@ -70,7 +146,7 @@ class PerfilMascotaScreen extends StatelessWidget {
 
     // Esta es la versión que reacciona a los cambios, la mascota nueva
     // Buscamos la mascota dentro del Provider para tener la versión actualizada
-    final userProvider = context.watch<UsuarioProvider>();
+    final userProvider = context.read<UsuarioProvider>();
     final Mascota mascotaActual = userProvider.usuario?.mascotas.firstWhere(
             (m) => m.id == mascotaArgs.id,
         orElse: () => mascotaArgs
@@ -79,10 +155,7 @@ class PerfilMascotaScreen extends StatelessWidget {
     // Lógica para comprobar dueño
     final String? currentUserUid = FirebaseAuth.instance.currentUser?.uid;
     final bool esMiMascota = mascotaActual.duenoFirebaseUid == currentUserUid;
-
-    print("Mi UID de Firebase: $currentUserUid");
-    print("UID del dueño de la mascota: ${mascotaActual.duenoFirebaseUid}");
-    print("¿Es mi mascota?: $esMiMascota");
+    final postsMascota = context.watch<UsuarioProvider>().postsMascota;
 
     return Scaffold(
       body: SafeArea(
@@ -98,21 +171,54 @@ class PerfilMascotaScreen extends StatelessWidget {
               flexibleSpace: FlexibleSpaceBar(
                 background: Hero( // Para una animación suave
                   tag: 'foto_${mascotaActual.id}', // Ya usamos la mascota nueva (la del provider)
-                  child: Image.network(
-                    mascotaActual.fotoPerfilMascota.startsWith('http')
-                        ? mascotaActual.fotoPerfilMascota
-                        : "http://10.0.2.2:8081/uploads/${mascotaActual.fotoPerfilMascota}",
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) {
-                      return Image.network(
-                        "http://10.0.2.2:8081/uploads/dog_default.png",
-                        fit: BoxFit.cover,
-                      );
-                    },
-                  )
+                  child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+
+                    /// IMAGEN MASCOTA
+                    Image.network(
+                      ImageHelper.pet(mascotaActual.fotoPerfilMascota),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) {
+                        return Image.network(
+                          ImageHelper.pet(null),
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    ),
+
+                    /// overlay solo si es editable
+                    if (esMiMascota)
+                      Container(
+                        //color: Colors.black.withOpacity(0.15),
+                      ),
+
+                    /// icono editar foto
+                    if (esMiMascota)
+                      Positioned(
+                        bottom: 15,
+                        right: 15,
+                        child: GestureDetector(
+                          onTap: () => _seleccionarImagen(mascotaActual),
+                          child: Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: pawBlue,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.add_a_photo_rounded,
+                              color: color.onPrimary,
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ),
+        ),
+      ),
         
             // Contenido del perfil
             SliverList(
@@ -176,7 +282,7 @@ class PerfilMascotaScreen extends StatelessWidget {
                       SizedBox(height: 5),
                       Text(
                         mascotaActual.descripcion.isEmpty
-                            ? "Este peludo aún no tiene descripción, ¡pero seguro que es encantador!"
+                            ? "Este peludo aún no tiene descripción, ¡pero seguro que es un encanto!"
                             : mascotaActual.descripcion,
                         style: TextStyle(fontSize: 15, height: 1.5, color: Colors.blueGrey[600], fontStyle: FontStyle.italic),
                       ),
@@ -186,6 +292,7 @@ class PerfilMascotaScreen extends StatelessWidget {
                       // Espacio para la futura Galería (Posts)
                       Divider(),
                       SizedBox(height: 10),
+
                       Row(
                         children: [
                           Icon(Icons.photo_library_outlined, color: Colors.grey),
@@ -200,8 +307,37 @@ class PerfilMascotaScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 100),
-                      // Espacio extra abajo
+
+                      SizedBox(height: 10),
+
+                      postsMascota.isEmpty
+                          ? Text(
+                        "Esta mascota aún no aparece en ningún post",
+                        style: TextStyle(color: Colors.grey),
+                      )
+                          : GridView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: postsMascota.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 6,
+                          mainAxisSpacing: 6,
+                        ),
+                        itemBuilder: (context, index) {
+                          final post = postsMascota[index];
+
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              post.rutaImagen.startsWith("http")
+                                  ? post.rutaImagen
+                                  : "http://10.0.2.2:8081/uploads/${post.rutaImagen}",
+                              fit: BoxFit.cover,
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

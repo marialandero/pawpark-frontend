@@ -63,7 +63,7 @@ class DetalleQuedadaScreen extends StatelessWidget {
           ),
           child: qProvider.isLoading
               ? CircularProgressIndicator(color: Colors.white)
-              : Text(yaApuntado ? "DESAPUNTARME" : "¡ME APUNTO!", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              : Text(yaApuntado ? "DESAPUNTARME" : "¡ME APUNTO!", style: TextStyle(color: color.onPrimary, fontWeight: FontWeight.bold)),
         ),
       ),
     );
