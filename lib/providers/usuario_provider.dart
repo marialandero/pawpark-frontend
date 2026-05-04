@@ -134,4 +134,13 @@ class UsuarioProvider with ChangeNotifier {
       print("Error cargando posts mascota: $e");
     }
   }
+
+  Future<void> eliminarMascota(int id) async {
+    final ok = await MascotaService.eliminarMascota(id);
+
+    if (ok && _usuario != null) {
+      _usuario!.mascotas.removeWhere((m) => m.id == id);
+      notifyListeners();
+    }
+  }
 }

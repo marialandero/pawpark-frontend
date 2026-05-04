@@ -7,6 +7,7 @@ import 'package:pawpark_frontend/providers/usuario_provider.dart';
 import 'package:pawpark_frontend/screens/feed/crear_post_screen.dart';
 import 'package:pawpark_frontend/screens/feed/feed_screen.dart';
 import 'package:pawpark_frontend/screens/feed/search_screen.dart';
+import 'package:pawpark_frontend/screens/mapas/mapa_prueba.dart';
 import 'package:pawpark_frontend/screens/mapas/mapas_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/form_editar_perfil_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/form_mascota_screen.dart';
@@ -65,6 +66,7 @@ class MyApp extends StatelessWidget {
       darkTheme: myTheme.dark(),
       themeMode: ThemeMode.system,
       home: AuthWrapper(),
+      // home: MapaPrueba(),
       routes: {
         "/login": (context) => LoginScreen(),
         "/register": (context) => RegisterScreen(),

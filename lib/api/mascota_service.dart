@@ -70,4 +70,12 @@ class MascotaService {
       return null;
     }
   }
+
+  static Future<bool> eliminarMascota(int id) async {
+    final uri = Uri.parse("$baseUrl/mascotas/$id");
+
+    final res = await http.delete(uri);
+
+    return res.statusCode == 200 || res.statusCode == 204;
+  }
 }

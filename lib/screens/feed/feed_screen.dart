@@ -101,7 +101,7 @@ class _FeedScreenState extends State<FeedScreen> {
 
                     : posts.isEmpty
                     ? Center(
-                  child: Text("No hay posts todavía 🐶"),
+                  child: Text("No hay posts todavía."),
                 )
 
                     : ListView.builder(

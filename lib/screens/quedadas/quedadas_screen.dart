@@ -144,7 +144,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
         width: double.infinity,
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
-        child: Text("Aún no tienes planes próximos."),
+        child: Center(child: Text("Aún no tienes planes próximos.")),
       );
     }
     return SizedBox(
@@ -154,7 +154,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
         itemCount: quedadas.length,
         itemBuilder: (context, index) {
           final q = quedadas[index];
-          // AÑADIDO: InkWell para que tus citas también lleven al detalle
+          // AÑADIDO: InkWell para que las citas también lleven al detalle
           return InkWell(
             onTap: () {
               context.read<QuedadaProvider>().seleccionarQuedada(q);
