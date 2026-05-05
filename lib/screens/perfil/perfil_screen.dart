@@ -32,6 +32,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     /// Si no, al de la sesión propia.
     final user = usuarioAjeno ?? userProvider.usuario;
 
+
     // ¿Es mi propio perfil?
     final String? miUid = FirebaseAuth.instance.currentUser?.uid;
     // Es mi perfil si no viene nadie por argumentos o si el UID coincide con el mío

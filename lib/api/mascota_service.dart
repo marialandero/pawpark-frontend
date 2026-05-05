@@ -31,16 +31,27 @@ class MascotaService {
   }
 
   static Future<bool> crearMascota(Map<String, dynamic> data) async {
-    final url = Uri.parse(baseUrl);
+    // Añadimos /mascotas a la URL
+    final url = Uri.parse('$baseUrl/mascotas');
+
+    print("🚀 Petición POST a: $url");
+    print("📦 Payload JSON: ${jsonEncode(data)}");
 
     try {
       final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data)
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(data)
       );
+
+      // DEBUG para ver qué dice el servidor si falla
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print("Error detectado: ${response.statusCode} - ${response.body}");
+      }
+
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
+      print("Error de conexión: $e");
       return false;
     }
   }

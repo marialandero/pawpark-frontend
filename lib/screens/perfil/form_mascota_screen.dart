@@ -118,6 +118,12 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
       'duenoFirebaseUid': uid,
     };
 
+    // 🔥 AÑADE ESTO AQUÍ
+    print("==== PROBANDO ENVÍO DESDE FORMULARIO ====");
+    print("Contenido de data: $data");
+    print("UID del dueño: $uid");
+    print("Raza seleccionada: $_razaSeleccionadaParaBackend");
+
     try {
       // Usamos el MascotaService
       final success = await MascotaService.crearMascota(data);
