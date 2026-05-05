@@ -5,15 +5,22 @@ import '../utils/image_helper.dart';
 class MascotaCard extends StatefulWidget {
   final Mascota mascota;
   final bool mostrarFavorito;
+  final bool esFavorito;
+  final VoidCallback onTapFavorito;
 
-  const MascotaCard({super.key, required this.mascota, this.mostrarFavorito = false});
+  const MascotaCard({
+    super.key,
+    required this.mascota,
+    this.mostrarFavorito = false,
+    this.esFavorito = false, // Este dato viene del Provider en PerfilScreen
+    required this.onTapFavorito, // Esta función se ejecuta en el Provider
+  });
 
   @override
   State<MascotaCard> createState() => _MascotaCardState();
 }
 
 class _MascotaCardState extends State<MascotaCard> {
-  bool isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
@@ -71,21 +78,19 @@ class _MascotaCardState extends State<MascotaCard> {
                         ),
                       ),
 
-                      // CORAZÓN DE FAVORITO (Sólo si es un perfil ajeno, no en el propio)
+                      // CORAZÓN DE FAVORITO SINCRONIZADO CON EL PROVIDER
                       if (widget.mostrarFavorito)
                       Positioned(
                         top: 5,
                         right: 5,
                         child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              isFavorite = !isFavorite; // Cambia de true a false y viceversa
-                            });
-                          },
+                          onTap: widget.onTapFavorito,
                           child: Container(
                             padding: EdgeInsets.all(4),
                             decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                            child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: Color(0xffd51339), size: 18),
+                            child: Icon(
+                                widget.esFavorito ? Icons.star : Icons.star_border, color: Colors.amber, size: 18
+                            ),
                           ),
                         ),
                       ),

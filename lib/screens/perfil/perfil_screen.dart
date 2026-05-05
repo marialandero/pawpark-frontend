@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../api/usuario_model.dart';
+import '../../api/usuario_service.dart';
 import '../../providers/usuario_provider.dart';
 import '../../widgets/bottom_bar.dart';
 import '../../widgets/mascota_card.dart';
@@ -15,49 +16,68 @@ class PerfilScreen extends StatefulWidget {
 }
 
 class _PerfilScreenState extends State<PerfilScreen> {
-  /// Ya no necesitamos la variable futureUsuario ni inicializar la descarga
-  /// en un initState, ya que el AuthWrapper o el Provider se encargan de ello
 
+  Usuario? usuarioAjeno; // Variable que sí podemos reasignar
+  bool inicializado = false;
+
+
+  /// Método para refrescar los datos dependiendo de quién es el perfil
+  Future<void> _refrescarDatos(bool esMiPerfil, String uid) async {
+    if (esMiPerfil) {
+      // Si es mi perfil, refrescamos el Provider global
+      await context.read<UsuarioProvider>().recargarUsuario();
+    } else {
+      // Si es perfil ajeno, actualizamos solo el estado local de esta pantalla
+      final nuevoUser = await UsuarioService.fetchPerfil(uid);
+      if (mounted) {
+        setState(() {
+          usuarioAjeno = nuevoUser;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
 
-    // Intentamos capturar un usuario ajeno pasado por argumentos
-    final usuarioAjeno = ModalRoute.of(context)?.settings.arguments as Usuario?;
+    if (!inicializado) {
+      // Solo la inicializamos la primera vez que entramos
+      // Intentamos capturar un usuario ajeno pasado por argumentos
+        usuarioAjeno = ModalRoute.of(context)?.settings.arguments as Usuario?;
+        inicializado = true;
+    }
 
     // Escuchamos al provider para nuestra sesión propia
     final userProvider = context.watch<UsuarioProvider>();
-
-    /// SE DECIDE: Si hay un usuario ajeno en los argmentos, mostramos ese.
-    /// Si no, al de la sesión propia.
-    final user = usuarioAjeno ?? userProvider.usuario;
-
-
-    // ¿Es mi propio perfil?
     final String? miUid = FirebaseAuth.instance.currentUser?.uid;
-    // Es mi perfil si no viene nadie por argumentos o si el UID coincide con el mío
-    final bool esMiPerfil = usuarioAjeno == null || user?.firebaseUid == miUid;
+
+    final bool esMiPerfil = usuarioAjeno == null || usuarioAjeno?.firebaseUid == miUid;
+    final user = esMiPerfil ? userProvider.usuario : usuarioAjeno;
+
+    // COMPROBACIÓN DE SEGUIMIENTO:
+    // Verificamos si el UID del perfil que vemos está en la lista 'siguiendo' de nuestro provider
+    final bool loSigo =
+        userProvider.usuario?.siguiendo.any(
+          (u) => u.firebaseUid == user?.firebaseUid,
+        ) ?? false;
 
     final pawBlue = Theme.of(context).colorScheme.primary;
     final parkRed = Theme.of(context).colorScheme.secondary;
     final color = Theme.of(context).colorScheme;
 
-
     // Gestionamos los estados de carga y error (Solo si estamos intentando cargar nuestro propio perfil)
     if (userProvider.isLoading && usuarioAjeno == null) {
       return Scaffold(
-          backgroundColor: color.onPrimary,
-          appBar: AppBar(
-            actions: [
-              IconButton(
-                onPressed: () => showSignOutConfirmation(color),
-                icon: Icon(Icons.logout, color: color.primary),
-              ),
-            ],
-          ),
-          body: Center(
-              child: CircularProgressIndicator()
-          )
+        backgroundColor: color.onPrimary,
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              onPressed: () => showSignOutConfirmation(color),
+              icon: Icon(Icons.logout, color: color.primary),
+            ),
+          ],
+        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -94,10 +114,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
         actions: [
           // Solo mostramos el logout si es mi propio perfil
           if (esMiPerfil)
-          IconButton(
-            onPressed: () => showSignOutConfirmation(color),
-            icon: Icon(Icons.logout, color: color.primary),
-          ),
+            IconButton(
+              onPressed: () => showSignOutConfirmation(color),
+              icon: Icon(Icons.logout, color: color.primary),
+            ),
         ],
       ),
       body: SafeArea(
@@ -113,7 +133,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     height: 180,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [pawBlue.withOpacity(0.9), parkRed.withOpacity(0.9)],
+                        colors: [
+                          pawBlue.withOpacity(0.9),
+                          parkRed.withOpacity(0.9),
+                        ],
                       ),
                       borderRadius: BorderRadius.vertical(
                         bottom: Radius.circular(30),
@@ -122,23 +145,73 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   ),
 
                   if (esMiPerfil)
-                  Positioned(
-                    top: 40,
-                    right: 20,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Aquí ya no necesitamos capturar el 'result' ni hacer setState porque el provider trae la información
-                        Navigator.pushNamed(context, "/editar-perfil");
-                      },
-                      icon: Icon(Icons.edit, size: 16),
-                      label: Text("Editar perfil"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        foregroundColor: color.onPrimary,
-                        elevation: 0,
+                    Positioned(
+                      top: 40,
+                      right: 20,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // Añadimos el refresco al volver de editar
+                          Navigator.pushNamed(context, "/editar-perfil")
+                              .then((_) => _refrescarDatos(true, user.firebaseUid));
+                        },
+                        icon: Icon(Icons.edit, size: 16),
+                        label: Text("Editar perfil"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          foregroundColor: color.onPrimary,
+                          elevation: 0,
+                        ),
                       ),
+                    )
+                  else
+                    // BOTÓN DE SEGUIMIENTO PARA PERFIL AJENO
+                    Positioned(
+                      top: 40,
+                      right: 20,
+                      child: loSigo
+                          ? TextButton.icon(
+                              onPressed: () async {
+                                await userProvider.alternarSeguimiento(user.firebaseUid);
+                                // Refresco unificado
+                                await _refrescarDatos(false, user.firebaseUid);
+                              },
+                              icon: Icon(
+                                Icons.check,
+                                color: color.onPrimary,
+                                size: 20,
+                              ),
+                              label: Text(
+                                "Siguiendo",
+                                style: TextStyle(
+                                  color: color.onPrimary,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            )
+                          : ElevatedButton.icon(
+                              onPressed: () async {
+                                // Cambiamos el estado en el servidor (nosotros empezamos a seguirle)
+                                await userProvider.alternarSeguimiento(user.firebaseUid);
+                                // Pedimos los datos frescos de este usuario específico
+                                await _refrescarDatos(false, user.firebaseUid);
+                              },
+                              icon: Icon(Icons.person_add, size: 18),
+                              label: Text("Seguir", style: TextStyle(fontSize: 16),),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: color.primary.withOpacity(0.3),
+                                foregroundColor: color.onPrimary,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)
+                                ),
+                                side: BorderSide(color: color.onPrimary.withOpacity(0.4), width: 1)
+                              ),
+                            ),
                     ),
-                  ),
 
                   // Avatar
                   Positioned(
@@ -148,7 +221,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: color.onPrimary,
-                        border: Border.all(color: color.onPrimary, width: 4)
+                        border: Border.all(color: color.onPrimary, width: 4),
                       ),
                       child: ClipOval(
                         child: SizedBox(
@@ -157,8 +230,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           child: Image.network(
                             ImageHelper.user(user.fotoPerfil),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                            Image.network(
+                            errorBuilder: (_, __, ___) => Image.network(
                               ImageHelper.user(null),
                               fit: BoxFit.cover,
                             ),
@@ -172,7 +244,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
               SizedBox(height: 70),
 
-              Text(user.nombre, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text(
+                user.nombre,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -182,10 +257,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ],
               ),
 
-              // Text(
-              //   "Miembro desde ${user.memberSince}",
-              //   style: TextStyle(color: color.outline, fontSize: 13),
-              // ),
+              Text(
+                "Miembro desde ${user.memberSince}",
+                style: TextStyle(color: color.outline, fontSize: 13),
+              ),
 
               if (user.descripcion.isNotEmpty)
                 Padding(
@@ -221,8 +296,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _stat(user.mascotas.length.toString(), "Mascotas", pawBlue),
-                    _stat((user.amigos?.length ?? 0).toString(), "Amigos", parkRed),
-                    _stat(user.encountersCount.toString(), "Encuentros", color.tertiary),
+                    _stat((user.seguidores?.length ?? 0).toString(), "Seguidores", parkRed),
+                    _stat(user.postsCount.toString(), "Posts", color.tertiary),
                   ],
                 ),
               ),
@@ -236,24 +311,27 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      esMiPerfil ? "Mis Mascotas" : "Mascotas de ${user.nombre}",
+                      esMiPerfil
+                          ? "Mis Mascotas"
+                          : "Mascotas de ${user.nombre}",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     if (esMiPerfil)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushNamed(context, "/form-mascota");
-                      },
-                      icon: Icon(Icons.add, size: 18),
-                      label: Text("Añadir"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: pawBlue,
-                        foregroundColor: color.onPrimary,
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, "/form-mascota")
+                          .then((_) => _refrescarDatos(true, user.firebaseUid));
+                        },
+                        icon: Icon(Icons.add, size: 18),
+                        label: Text("Añadir"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: pawBlue,
+                          foregroundColor: color.onPrimary,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -262,16 +340,28 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
               // Lista de mascotas
               user.mascotas.isEmpty
-                  ? Padding(padding: EdgeInsets.all(20.0), child: Text("¡Aún no hay mascotas registradas!"))
+                  ? Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text("¡Aún no hay mascotas registradas!"),
+                    )
                   : ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
                       padding: EdgeInsets.symmetric(horizontal: 20),
                       itemCount: user.mascotas.length,
                       itemBuilder: (context, index) {
-                        return MascotaCard(mascota: user.mascotas[index],
-                        // Activamos el corazón de favorito solo si NO es mi perfil);
-                            mostrarFavorito: !esMiPerfil,
+                        final mascota = user.mascotas[index];
+                        final bool esFavorita =
+                            userProvider.usuario?.mascotasFavoritas.any(
+                              (m) => m.id == mascota.id,
+                            ) ??
+                            false;
+                        return MascotaCard(
+                          mascota: mascota,
+                          mostrarFavorito: !esMiPerfil,
+                          esFavorito: esFavorita,
+                          onTapFavorito: () =>
+                              userProvider.alternarMascotaFavorita(mascota.id!),
                         );
                       },
                     ),
@@ -318,7 +408,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
               // Se limpia el Provider
               context.read<UsuarioProvider>().limpiarUsuario();
               // Volvemos al login
-              Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                "/login",
+                (route) => false,
+              );
             },
             child: Text(
               "CERRAR SESIÓN",

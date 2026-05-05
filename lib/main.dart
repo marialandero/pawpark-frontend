@@ -65,8 +65,8 @@ class MyApp extends StatelessWidget {
       theme: myTheme.light(),
       darkTheme: myTheme.dark(),
       themeMode: ThemeMode.system,
-      // home: AuthWrapper(),
-      home: MapaPrueba(),
+      home: AuthWrapper(),
+      // home: MapaPrueba(),
       routes: {
         "/login": (context) => LoginScreen(),
         "/register": (context) => RegisterScreen(),

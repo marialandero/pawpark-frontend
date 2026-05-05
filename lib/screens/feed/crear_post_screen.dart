@@ -57,7 +57,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
     if (success && mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Post publicado 🐾")),
+        const SnackBar(content: Text("¡Post publicado!")),
       );
     }
   }

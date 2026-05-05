@@ -104,10 +104,10 @@ class UsuarioProvider with ChangeNotifier {
 
       if (index == -1) return;
 
-      // 🧠 reemplazo seguro del objeto
+      // reemplazo seguro del objeto
       _usuario!.mascotas[index] = mascotaActualizada;
 
-      notifyListeners(); // 🔥 refresca UI global
+      notifyListeners(); // refresca UI global
     } catch (e) {
       print("Error provider actualizarFotoMascota: $e");
     }
@@ -140,6 +140,29 @@ class UsuarioProvider with ChangeNotifier {
 
     if (ok && _usuario != null) {
       _usuario!.mascotas.removeWhere((m) => m.id == id);
+      notifyListeners();
+    }
+  }
+
+  Future<void> alternarSeguimiento(String targetUid) async {
+    if (usuario == null) return;
+
+    final exito = await UsuarioService.alternarSeguimiento(usuario!.firebaseUid, targetUid);
+
+    if (exito) {
+      // Refrescamos los datos del usuario para obtener las listas actualizadas
+      await cargarUsuario(usuario!.firebaseUid);
+      notifyListeners();
+    }
+  }
+
+  Future<void> alternarMascotaFavorita(int mascotaId) async {
+    if (usuario == null) return;
+
+    final exito = await UsuarioService.alternarMascotaFavorita(usuario!.firebaseUid, mascotaId);
+
+    if (exito) {
+      await cargarUsuario(usuario!.firebaseUid);
       notifyListeners();
     }
   }

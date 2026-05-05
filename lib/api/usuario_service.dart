@@ -101,4 +101,16 @@ class UsuarioService {
 
     return null;
   }
+
+  static Future<bool> alternarSeguimiento(String miUid, String targetUid) async {
+    final url = Uri.parse('$baseUrl/$miUid/seguir/$targetUid');
+    final response = await http.post(url);
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> alternarMascotaFavorita(String miUid, int mascotaId) async {
+    final url = Uri.parse('$baseUrl/$miUid/favorito/$mascotaId');
+    final response = await http.post(url);
+    return response.statusCode == 200;
+  }
 }
