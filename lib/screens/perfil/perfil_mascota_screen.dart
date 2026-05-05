@@ -16,7 +16,6 @@ class PerfilMascotaScreen extends StatefulWidget {
 }
 
 class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
-
   File? _imagenSeleccionada; // imagen elegida del dispositivo
   final ImagePicker _picker = ImagePicker();
 
@@ -52,35 +51,62 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
       final fileName = respStr.split("/").last;
 
       // Se guarda en backend
-      await context.read<UsuarioProvider>().actualizarFotoMascota(mascota.id!, fileName);
+      await context.read<UsuarioProvider>().actualizarFotoMascota(
+        mascota.id!,
+        fileName,
+      );
 
       // Recargar usuario COMPLETO
       await context.read<UsuarioProvider>().recargarUsuario();
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Foto actualizada")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Foto actualizada")));
     }
   }
 
   void _mostrarDialogoEdicion(BuildContext context, Mascota mascota) {
-    final TextEditingController descController = TextEditingController(text: mascota.descripcion);
+    final TextEditingController descController = TextEditingController(
+      text: mascota.descripcion,
+    );
+    final TextEditingController edadController = TextEditingController(
+      text: mascota.edad.toString(),
+    );
     final color = Theme.of(context).colorScheme;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Sobre ${mascota.nombre}"),
-          content: TextField(
-            controller: descController,
-            maxLines: 5,
-            decoration: InputDecoration(
-              hintText: "Escribe algo sobre tu mascota...",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+          title: Text("Editar perfil de ${mascota.nombre}"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: edadController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: "Edad (años)",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              SizedBox(height: 13),
+              TextField(
+                controller: descController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText: "Escribe algo sobre tu mascota...",
+                  labelText: "Descripción",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -93,19 +119,28 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                 foregroundColor: color.onPrimary,
               ),
               onPressed: () async {
-                final exito = await context.read<UsuarioProvider>().actualizarDescripcionMascota(
-                    mascota.id!,
-                    descController.text.trim()
-                );
+                final edadInt =
+                    int.tryParse(edadController.text) ?? mascota.edad;
+                final exito = await context
+                    .read<UsuarioProvider>()
+                    .actualizarDatosMascota(
+                      mascota.id!,
+                      descController.text.trim(),
+                      edadInt,
+                    );
 
                 if (exito) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Descripción actualizada correctamente")),
+                    SnackBar(
+                      content: Text("Descripción actualizada correctamente"),
+                    ),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Error al conectar con el servidor")),
+                    SnackBar(
+                      content: Text("Error al conectar con el servidor"),
+                    ),
                   );
                 }
               },
@@ -117,29 +152,23 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
     );
   }
 
-
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
     if (_postsCargados) return;
 
-    final mascotaArgs =
-    ModalRoute.of(context)!.settings.arguments as Mascota;
+    final mascotaArgs = ModalRoute.of(context)!.settings.arguments as Mascota;
 
     _postsCargados = true;
 
     Future.microtask(() {
-      context.read<UsuarioProvider>()
-          .cargarPostsMascota(mascotaArgs.id!);
+      context.read<UsuarioProvider>().cargarPostsMascota(mascotaArgs.id!);
     });
-
   }
 
   @override
   Widget build(BuildContext context) {
-
     final color = Theme.of(context).colorScheme;
     final pawBlue = color.primary;
 
@@ -149,10 +178,12 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
     // Esta es la versión que reacciona a los cambios, la mascota nueva
     // Buscamos la mascota dentro del Provider para tener la versión actualizada
     final userProvider = context.read<UsuarioProvider>();
-    final Mascota mascotaActual = userProvider.usuario?.mascotas.firstWhere(
-            (m) => m.id == mascotaArgs.id,
-        orElse: () => mascotaArgs
-    ) ?? mascotaArgs;
+    final Mascota mascotaActual =
+        userProvider.usuario?.mascotas.firstWhere(
+          (m) => m.id == mascotaArgs.id,
+          orElse: () => mascotaArgs,
+        ) ??
+        mascotaArgs;
 
     // Lógica para comprobar dueño
     final String? currentUserUid = FirebaseAuth.instance.currentUser?.uid;
@@ -171,72 +202,120 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
               stretch: true,
               // Hace que la foto se estire si tiras hacia abajo
               flexibleSpace: FlexibleSpaceBar(
-                background: Hero( // Para una animación suave
-                  tag: 'foto_${mascotaActual.id}', // Ya usamos la mascota nueva (la del provider)
+                background: Hero(
+                  // Para una animación suave
+                  tag: 'foto_${mascotaActual.id}',
+                  // Ya usamos la mascota nueva (la del provider)
                   child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-
-                    /// IMAGEN MASCOTA
-                    Image.network(
-                      ImageHelper.pet(mascotaActual.fotoPerfilMascota),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) {
-                        return Image.network(
-                          ImageHelper.pet(null),
-                          fit: BoxFit.cover,
-                        );
-                      },
-                    ),
-
-                    /// overlay solo si es editable
-                    if (esMiMascota)
-                      Container(
-                        //color: Colors.black.withOpacity(0.15),
+                    fit: StackFit.expand,
+                    children: [
+                      /// IMAGEN MASCOTA
+                      Image.network(
+                        ImageHelper.pet(mascotaActual.fotoPerfilMascota),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) {
+                          return Image.network(
+                            ImageHelper.pet(null),
+                            fit: BoxFit.cover,
+                          );
+                        },
                       ),
 
-                    /// icono editar foto
-                    if (esMiMascota)
-                      Positioned(
-                        bottom: 15,
-                        right: 15,
-                        child: GestureDetector(
-                          onTap: () => _seleccionarImagen(mascotaActual),
-                          child: Container(
-                            padding: EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: pawBlue,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.add_a_photo_rounded,
-                              color: color.onPrimary,
-                              size: 22,
+                      /// overlay solo si es editable
+                      if (esMiMascota)
+                        Container(
+                          //color: Colors.black.withOpacity(0.15),
+                        ),
+
+                      /// icono editar foto
+                      if (esMiMascota)
+                        Positioned(
+                          bottom: 15,
+                          right: 15,
+                          child: GestureDetector(
+                            onTap: () => _seleccionarImagen(mascotaActual),
+                            child: Container(
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: pawBlue,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.add_a_photo_rounded,
+                                color: color.onPrimary,
+                                size: 22,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-        ),
-      ),
-        
+            ),
+
             // Contenido del perfil
             SliverList(
               delegate: SliverChildListDelegate([
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 25.0,
+                    vertical: 20.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(mascotaActual.nombre, style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: -0.1)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            mascotaActual.nombre,
+                            style: Theme.of(context).textTheme.displaySmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.1,
+                                ),
+                          ),
+                          if (esMiMascota)
+                            IconButton(
+                              onPressed: () => _mostrarDialogoEdicion(
+                                context,
+                                mascotaActual,
+                              ),
+                              icon: Icon(
+                                Icons.edit_note,
+                                color: pawBlue,
+                                size: 26,
+                              ),
+                            ),
+                        ],
+                      ),
                       SizedBox(height: 5),
-                      Text(mascotaActual.raza.replaceAll('_', ' '), style: TextStyle(fontSize: 18, color: color.primary, fontWeight: FontWeight.w600,),),
+                      Text(
+                        mascotaActual.raza.replaceAll('_', ' '),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: color.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       SizedBox(height: 5),
-                      Text("${mascotaActual.edad} años", style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500,),),
+                      Text(
+                        "${mascotaActual.edad} años",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       SizedBox(height: 25),
-                      Text("Personalidad", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,),),
+                      Text(
+                        "Personalidad",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: 20),
                       Wrap(
                         spacing: 8,
@@ -268,36 +347,40 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                         }).toList(),
                       ),
                       SizedBox(height: 25),
-        
+
                       // Descripción
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text("Sobre ${mascotaActual.nombre}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          if (esMiMascota)
-                            IconButton(
-                                onPressed: () => _mostrarDialogoEdicion(context, mascotaActual),
-                                icon: Icon(Icons.edit_note, color: pawBlue, size: 26)
-                            )
-                        ],
+                      Text(
+                        "Sobre ${mascotaActual.nombre}",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 5),
                       Text(
                         mascotaActual.descripcion.isEmpty
                             ? "Este peludo aún no tiene descripción, ¡pero seguro que es un encanto!"
                             : mascotaActual.descripcion,
-                        style: TextStyle(fontSize: 15, height: 1.5, color: Colors.blueGrey[600], fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.5,
+                          color: Colors.blueGrey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
-        
+
                       SizedBox(height: 30),
-        
+
                       // Espacio para la futura Galería (Posts)
                       Divider(),
                       SizedBox(height: 10),
 
                       Row(
                         children: [
-                          Icon(Icons.photo_library_outlined, color: Colors.grey),
+                          Icon(
+                            Icons.photo_library_outlined,
+                            color: Colors.grey,
+                          ),
                           SizedBox(width: 10),
                           Text(
                             "Galería de fotos",
@@ -314,36 +397,72 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
 
                       postsMascota.isEmpty
                           ? Text(
-                        "Esta mascota aún no aparece en ningún post",
-                        style: TextStyle(color: Colors.grey),
-                      )
+                              "Esta mascota aún no aparece en ningún post",
+                              style: TextStyle(color: Colors.grey),
+                            )
                           : GridView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: postsMascota.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 6,
-                          mainAxisSpacing: 6,
-                        ),
-                        itemBuilder: (context, index) {
-                          final post = postsMascota[index];
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: postsMascota.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 6,
+                                    mainAxisSpacing: 6,
+                                  ),
+                              itemBuilder: (context, index) {
+                                final post = postsMascota[index];
+                                final url = post.rutaImagen.startsWith("http")
+                                    ? post.rutaImagen
+                                    : "http://10.0.2.2:8081/uploads/${post.rutaImagen}";
 
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              post.rutaImagen.startsWith("http")
-                                  ? post.rutaImagen
-                                  : "http://10.0.2.2:8081/uploads/${post.rutaImagen}",
-                              fit: BoxFit.cover,
+                                return GestureDetector(
+                                  onTap: () => _verImagenAmpliada(context, url),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.network(
+                                      url,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ],
                   ),
                 ),
               ]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Muestra la imagen a pantalla completa con zoom
+  void _verImagenAmpliada(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: InteractiveViewer(
+                clipBehavior: Clip.none,
+                child: Image.network(url, fit: BoxFit.contain),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
           ],
         ),

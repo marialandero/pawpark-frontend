@@ -7,25 +7,29 @@ class MascotaService {
   // BASE URL SIN /mascotas
   static const String baseUrl = 'http://10.0.2.2:8081';
 
-  // Actualizar descripción
-  static Future<Mascota?> updateDescripcion(int mascotaId, String nuevaDesc) async {
-    final url = Uri.parse('$baseUrl/mascotas/$mascotaId/descripcion');
+  static Future<Mascota?> updateMascota({
+    required int id,
+    required String descripcion,
+    required int edad
+  }) async {
+    final url = Uri.parse('$baseUrl/mascotas/$id/perfil'); // Cambiado a un endpoint de 'perfil' más genérico
 
     try {
       final response = await http.put(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"descripcion": nuevaDesc})
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            "descripcion": descripcion,
+            "edad": edad
+          })
       );
 
       if (response.statusCode == 200) {
-        // Retornamos el objeto que nos manda el backend
         return Mascota.fromJson(jsonDecode(response.body));
       }
-      print("Error backend descripcion: ${response.body}");
       return null;
     } catch (e) {
-      debugPrint("Error en updateDescripcion de MascotaService: $e");
+      debugPrint("Error en updateMascota: $e");
       return null;
     }
   }
