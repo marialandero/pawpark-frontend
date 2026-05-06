@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:pawpark_frontend/api/post_model.dart';
+import 'package:pawpark_frontend/api/model/post_model.dart';
 
 class PostService {
 

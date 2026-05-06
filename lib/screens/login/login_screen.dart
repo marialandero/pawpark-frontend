@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   String errorMessage = '';
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +148,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 login();
                               }
                             },
-                            child: Text(
+                            child: isLoading
+                            ? CircularProgressIndicator(color: color.onPrimary)
+                            : Text(
                               "INICIAR SESIÓN",
                               style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
                             ),
@@ -195,22 +198,25 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (userCredential.user != null && mounted) {
         // Cargamos los datos del backend en el Provider
+        // IMPORTANTE: Aquí es donde la app conecta con MySQL/Java
         await context.read<UsuarioProvider>().cargarUsuario(userCredential.user!.uid);
         // Navegamos limpiando el historial para que no se pueda pulsar el botón de volver atrás
-        Navigator.pushNamedAndRemoveUntil(context, "/perfil", (route) => false);
+        if (mounted) Navigator.pushNamedAndRemoveUntil(context, "/perfil", (route) => false);
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         if (e.code == 'user-not-found' || e.code == 'wrong-password'){
-          errorMessage = "Credenciales incorrectas";
+          errorMessage = "Correo o contraseña incorrectos";
         } else {
-          errorMessage = "Error al iniciar sesión. Inténtalo de nuevo.";
+          errorMessage = "Error al iniciar sesión";
         }
       });
     } catch (e) {
       setState(() {
         errorMessage = "Error de conexión con el servidor";
       });
+    } finally {
+      if (mounted) setState(() => isLoading = false); // Terminamos de cargar pase lo que pase
     }
   }
 }

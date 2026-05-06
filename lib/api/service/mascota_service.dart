@@ -1,11 +1,44 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'mascota_model.dart';
+import '../model/mascota_model.dart';
 
 class MascotaService {
-  // BASE URL SIN /mascotas
+
   static const String baseUrl = 'http://10.0.2.2:8081';
+
+  // Subir imágenes y obtener el nombre del archivo
+  static Future<String?> subirImagen(File imagen) async {
+    final url = Uri.parse('$baseUrl/upload');
+    try {
+      final request = http.MultipartRequest("POST", url);
+      request.files.add(
+        await http.MultipartFile.fromPath("file", imagen.path),
+      );
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final respStr = await response.stream.bytesToString();
+        // Retorna solo el nombre del archivo (ej: imagen_123.jpg)
+        return respStr.split("/").last;
+      }
+      return null;
+    } catch (e) {
+      debugPrint("Error en MascotaService.subirImagen: $e");
+      return null;
+    }
+  }
+
+  // UTILIDAD: Para formatear nombres de razas (BORDER_COLLIE -> Border Collie)
+  static String formatearRaza(String texto) {
+    if (texto.isEmpty) return "";
+    return texto.replaceAll('_', ' ').toLowerCase().split(' ').map((word) {
+      return word.isEmpty ? "" : word[0].toUpperCase() + word.substring(1);
+    }).join(' ');
+  }
 
   static Future<Mascota?> updateMascota({
     required int id,

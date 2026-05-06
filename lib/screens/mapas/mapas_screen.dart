@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../api/usuario_model.dart';
-import '../../api/usuario_service.dart';
+import '../../api/model/usuario_model.dart';
+import '../../api/service/usuario_service.dart';
 import '../../widgets/bottom_bar.dart';
 
 class MapasScreen extends StatefulWidget {

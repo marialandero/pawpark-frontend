@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pawpark_frontend/widgets/avatar_perfil.dart';
 import 'package:provider/provider.dart';
 
-import '../../api/usuario_model.dart';
+import '../../api/model/usuario_model.dart';
 import '../../providers/usuario_provider.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -45,11 +45,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Buscar usuarios"),
+        title: Text("Busca en PawPark", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
 
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
         child: Column(
           children: [
 

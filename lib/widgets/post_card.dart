@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pawpark_frontend/api/usuario_service.dart';
-import '../api/post_model.dart';
+import 'package:pawpark_frontend/api/service/usuario_service.dart';
+import '../api/model/post_model.dart';
 import 'avatar_perfil.dart';
 import '../utils/image_helper.dart';
 

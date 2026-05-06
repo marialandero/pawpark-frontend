@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/post_provider.dart';
 import '../../providers/usuario_provider.dart';
-import '../../api/mascota_model.dart';
+import '../../api/model/mascota_model.dart';
 
 class CrearPostScreen extends StatefulWidget {
   const CrearPostScreen({super.key});

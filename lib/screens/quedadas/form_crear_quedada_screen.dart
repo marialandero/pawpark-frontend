@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/usuario_provider.dart';
-import '../../api/quedada_service.dart';
+import '../../api/service/quedada_service.dart';
 
 class FormQuedadaScreen extends StatefulWidget {
   const FormQuedadaScreen({super.key});

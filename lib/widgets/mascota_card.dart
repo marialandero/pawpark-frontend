@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../api/mascota_model.dart';
+import '../api/model/mascota_model.dart';
 import '../utils/image_helper.dart';
 
 class MascotaCard extends StatefulWidget {

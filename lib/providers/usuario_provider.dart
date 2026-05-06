@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../api/mascota_model.dart';
-import '../api/mascota_service.dart';
-import '../api/post_model.dart';
-import '../api/post_service.dart';
-import '../api/usuario_model.dart';
-import '../api/usuario_service.dart';
+import '../api/model/mascota_model.dart';
+import '../api/service/mascota_service.dart';
+import '../api/model/post_model.dart';
+import '../api/service/post_service.dart';
+import '../api/model/usuario_model.dart';
+import '../api/service/usuario_service.dart';
 
 class UsuarioProvider with ChangeNotifier {
   Usuario? _usuario;

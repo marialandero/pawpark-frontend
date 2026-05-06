@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../api/quedada_model.dart';
-import '../api/quedada_service.dart';
+import '../api/model/quedada_model.dart';
+import '../api/service/quedada_service.dart';
 
 class QuedadaProvider with ChangeNotifier {
   Quedada? _quedadaSeleccionada;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import '../../api/usuario_model.dart';
-import '../../api/usuario_service.dart';
+import '../../api/model/usuario_model.dart';
+import '../../api/service/usuario_service.dart';
 import '../../providers/usuario_provider.dart';
 import '../../widgets/bottom_bar.dart';
 import '../../widgets/mascota_card.dart';
@@ -216,23 +216,26 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   // Avatar
                   Positioned(
                     bottom: -60,
-                    child: Container(
-                      padding: EdgeInsets.all(0),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: color.onPrimary,
-                        border: Border.all(color: color.onPrimary, width: 4),
-                      ),
-                      child: ClipOval(
-                        child: SizedBox(
-                          width: 130,
-                          height: 130,
-                          child: Image.network(
-                            ImageHelper.user(user.fotoPerfil),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Image.network(
-                              ImageHelper.user(null),
+                    child: GestureDetector(
+                      onTap: () => _verImagenAmpliada(context, ImageHelper.user(user.fotoPerfil)),
+                      child: Container(
+                        padding: EdgeInsets.all(0),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: color.onPrimary,
+                          border: Border.all(color: color.onPrimary, width: 4),
+                        ),
+                        child: ClipOval(
+                          child: SizedBox(
+                            width: 130,
+                            height: 130,
+                            child: Image.network(
+                              ImageHelper.user(user.fotoPerfil),
                               fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Image.network(
+                                ImageHelper.user(null),
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         ),
@@ -420,6 +423,43 @@ class _PerfilScreenState extends State<PerfilScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _verImagenAmpliada(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: InteractiveViewer(
+                clipBehavior: Clip.none,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Image.network(
+                    ImageHelper.user(null),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -7,8 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
-import '../../api/usuario_model.dart';
-import '../../api/usuario_service.dart';
+import '../../api/model/usuario_model.dart';
+import '../../api/service/usuario_service.dart';
 import '../../utils/image_helper.dart';
 
 class FormEditarPerfilScreen extends StatefulWidget {

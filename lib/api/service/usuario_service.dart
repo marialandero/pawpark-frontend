@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
-import 'mascota_model.dart';
-import 'usuario_model.dart';
+import '../model/mascota_model.dart';
+import '../model/usuario_model.dart';
 
 class UsuarioService {
   /// Usamos el puente de Google 10.0.2.2 que apunta a nuestro pc en lugar de
@@ -112,5 +113,21 @@ class UsuarioService {
     final url = Uri.parse('$baseUrl/$miUid/favorito/$mascotaId');
     final response = await http.post(url);
     return response.statusCode == 200;
+  }
+
+  static Future<bool> registrarEnBackend(Map<String, dynamic> datosUsuario) async {
+    final url = Uri.parse(baseUrl);
+    
+    try{
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(datosUsuario)
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Error de conexión en UsuarioService: $e");
+      return false;
+    }
   }
 }

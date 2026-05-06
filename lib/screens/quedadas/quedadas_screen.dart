@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import '../../api/quedada_model.dart';
-import '../../api/quedada_service.dart';
-import '../../api/usuario_model.dart';
-import '../../api/usuario_service.dart';
+import '../../api/model/quedada_model.dart';
+import '../../api/service/quedada_service.dart';
+import '../../api/model/usuario_model.dart';
+import '../../api/service/usuario_service.dart';
 import '../../providers/usuario_provider.dart';
 import '../../providers/quedada_provider.dart'; // <-- AÑADIDO: Importamos el buzón de datos
 import '../../widgets/bottom_bar.dart';

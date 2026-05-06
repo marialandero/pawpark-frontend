@@ -1,4 +1,4 @@
-import 'package:pawpark_frontend/api/mascota_model.dart';
+import 'package:pawpark_frontend/api/model/mascota_model.dart';
 
 class Usuario {
   final String firebaseUid;

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../api/post_model.dart';
-import '../api/post_service.dart';
+import '../api/model/post_model.dart';
+import '../api/service/post_service.dart';
 
 class PostProvider extends ChangeNotifier {
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
+import 'package:pawpark_frontend/api/service/usuario_service.dart';
 import 'package:pawpark_frontend/providers/usuario_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final nicknameController = TextEditingController();
   final locationController = TextEditingController();
   final nameController = TextEditingController();
+  bool isLoading = false;
   String errorMessage = '';
 
   @override
@@ -57,7 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         color: Colors.black12,
                         blurRadius: 15,
                         offset: Offset(0, 5),
-                      )
+                      ),
                     ],
                     border: Border.all(
                       color: pawBlue.withOpacity(0.2),
@@ -82,10 +84,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: nameController,
                           decoration: InputDecoration(
                             labelText: "Nombre completo",
-                            prefixIcon: Icon(Icons.person_outline, color: pawBlue),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            prefixIcon: Icon(
+                              Icons.person_outline,
+                              color: pawBlue,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          validator: (value) => value == null || value.isEmpty ? "Campo obligatorio" : null,
+                          validator: (value) => value == null || value.isEmpty
+                              ? "Campo obligatorio"
+                              : null,
                         ),
                         SizedBox(height: 15),
 
@@ -93,10 +102,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: nicknameController,
                           decoration: InputDecoration(
                             labelText: "Nickname (ej: @tobi_fan)",
-                            prefixIcon: Icon(Icons.alternate_email, color: pawBlue),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            prefixIcon: Icon(
+                              Icons.alternate_email,
+                              color: pawBlue,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          validator: (value) => value == null || value.isEmpty ? "Campo obligatorio" : null,
+                          validator: (value) => value == null || value.isEmpty
+                              ? "Campo obligatorio"
+                              : null,
                         ),
                         SizedBox(height: 15),
 
@@ -104,10 +120,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: locationController,
                           decoration: InputDecoration(
                             labelText: "Localidad",
-                            prefixIcon: Icon(Icons.location_on_outlined, color: pawBlue),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            prefixIcon: Icon(
+                              Icons.location_on_outlined,
+                              color: pawBlue,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          validator: (value) => value == null || value.isEmpty ? "Campo obligatorio" : null,
+                          validator: (value) => value == null || value.isEmpty
+                              ? "Campo obligatorio"
+                              : null,
                         ),
                         SizedBox(height: 15),
 
@@ -115,7 +138,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: emailController,
                           decoration: InputDecoration(
                             labelText: "Correo electrónico",
-                            prefixIcon: Icon(Icons.email_outlined, color: pawBlue),
+                            prefixIcon: Icon(
+                              Icons.email_outlined,
+                              color: pawBlue,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -128,7 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return "Introduce un email válido.";
                             }
                             return null;
-                          }
+                          },
                         ),
                         SizedBox(height: 15),
 
@@ -137,13 +163,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           obscureText: true,
                           decoration: InputDecoration(
                             labelText: "Contraseña",
-                            prefixIcon: Icon(Icons.lock_outline, color: parkRed),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: parkRed,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           validator: (value) {
-                            if (value == null || value.length < 6) return "La contraseña debe tener al menos 6 caracteres";
+                            if (value == null || value.length < 6)
+                              return "La contraseña debe tener al menos 6 caracteres";
                             return null;
                           },
                         ),
@@ -161,10 +191,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return "Debes confirmar tu contraseña.";
+                              return "Debes confirmar tu contraseña";
                             }
                             if (value != passwordController.text) {
-                              return "Las contraseñas no coinciden.";
+                              return "Las contraseñas no coinciden";
                             }
                             return null;
                           },
@@ -174,7 +204,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           SizedBox(height: 15),
                           Text(
                             errorMessage,
-                            style: TextStyle(color: color.error, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: color.error,
+                              fontWeight: FontWeight.bold,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -193,14 +226,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               elevation: 3,
                             ),
-                            onPressed: () {
+                            // Si está cargando, deshabilitamos el botón (onPressed: null)
+                            onPressed: isLoading ? null : () {
                               if (_formKey.currentState!.validate()) {
                                 register();
                               }
                             },
                             child: Text(
                               "CREAR CUENTA",
-                              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
                             ),
                           ),
                         ),
@@ -212,7 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: () => Navigator.pop(context),
                           child: RichText(
                             text: TextSpan(
-                              text: "¿Ya tienes cuenta? ",
+                              text: "¿Ya tienes cuenta?",
                               style: TextStyle(color: color.outline),
                               children: [
                                 TextSpan(
@@ -238,55 +275,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Tenemos que asegurarnos de capturar errores en la petición HTTP
-  Future<void> _saveInBackend(String uid) async {
-    final url = Uri.parse('http://10.0.2.2:8081/usuarios'); // Puerto 8081
+  void register() async {
+    setState(() {
+      errorMessage = '';
+      isLoading = true; // Bloqueamos la interfaz
+    });
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'firebaseUid': uid,
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
+
+      if (userCredential.user != null) {
+        final datosParaBackend = {
+          'firebaseUid': userCredential.user!.uid,
           'nombre': nameController.text.trim(),
           'nickname': nicknameController.text.trim(),
           'localidad': locationController.text.trim(),
           'email': emailController.text.trim(),
           'fotoPerfil': null,
           'memberSince': DateTime.now().year.toString(),
-          'encountersCount': 0
-        }),
-      );
+          'encountersCount': 0,
+        };
 
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        print("Error en Backend: ${response.body}"); // Para saber si Java rechazó el JSON
-      }
-    } catch (e) {
-      print("Error de conexión: $e"); // Para saber si la IP/Puerto están mal
-    }
-  }
+        // Sincronización con Java (MySQL)
+        final exitoBackend = await UsuarioService.registrarEnBackend(
+          datosParaBackend,
+        );
 
-  void register() async {
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-
-      if (userCredential.user != null) {
-        // IMPORTANTE: Ponemos el await para que no navegue hasta que MySQL confirme
-        await _saveInBackend(userCredential.user!.uid);
-
-        if (mounted) {
+        if (exitoBackend && mounted) {
           final userProvider = Provider.of<UsuarioProvider>(context, listen: false);
           await userProvider.cargarUsuario(userCredential.user!.uid);
-          // Usamos pushNamedAndRemoveUntil para que no pueda volver atrás al formulario
-          Navigator.pushNamedAndRemoveUntil(context, "/perfil", (route) => false);
+          if (mounted) Navigator.pushNamedAndRemoveUntil(context, "/perfil", (route) => false);
+        } else {
+          setState(() {
+            errorMessage = "Cuenta creada en Firebase, pero hubo un error con el servidor de PawPark";
+          });
         }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         errorMessage = e.message ?? "Error en Firebase";
       });
+    } catch (e) {
+      setState(() {
+        errorMessage = "Ocurrió un error inesperado";
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false; // Liberamos el botón
+        });
+      }
     }
   }
 }

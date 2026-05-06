@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../api/mascota_model.dart';
+import '../../api/model/mascota_model.dart';
+import '../../api/service/mascota_service.dart';
 import '../../providers/usuario_provider.dart';
 import '../../utils/image_helper.dart';
 import 'dart:io';
@@ -16,16 +17,13 @@ class PerfilMascotaScreen extends StatefulWidget {
 }
 
 class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
-  File? _imagenSeleccionada; // imagen elegida del dispositivo
+  File? _imagenSeleccionada; // Imagen elegida del dispositivo
   final ImagePicker _picker = ImagePicker();
-
   bool _postsCargados = false;
 
   Future<void> _seleccionarImagen(Mascota mascota) async {
     final XFile? imagen = await _picker.pickImage(source: ImageSource.gallery);
-
     if (imagen == null) return;
-
     setState(() {
       _imagenSeleccionada = File(imagen.path);
     });
@@ -34,40 +32,29 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
   }
 
   Future<void> _subirImagen(Mascota mascota) async {
-    final uri = Uri.parse("http://10.0.2.2:8081/upload");
+    if (_imagenSeleccionada == null) return;
 
-    final request = http.MultipartRequest("POST", uri);
+    // El Service sube el archivo físico
+    final fileName = await MascotaService.subirImagen(_imagenSeleccionada!);
 
-    request.files.add(
-      await http.MultipartFile.fromPath("file", _imagenSeleccionada!.path),
-    );
-
-    final response = await request.send();
-
-    if (response.statusCode == 200) {
-      final respStr = await response.stream.bytesToString();
-
-      // Backend devuelve URL completa -> extraemos nombre archivo
-      final fileName = respStr.split("/").last;
-
-      // Se guarda en backend
+    if (fileName != null) {
+      // El Provider actualiza la base de datos y notifica cambios
       await context.read<UsuarioProvider>().actualizarFotoMascota(
         mascota.id!,
         fileName,
       );
 
-      // Recargar usuario COMPLETO
       await context.read<UsuarioProvider>().recargarUsuario();
 
       if (!mounted) return;
-
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Foto actualizada")));
+      ).showSnackBar(const SnackBar(content: Text("Foto actualizada")));
     }
   }
 
   void _mostrarDialogoEdicion(BuildContext context, Mascota mascota) {
+    final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
     final TextEditingController descController = TextEditingController(
       text: mascota.descripcion,
     );
@@ -81,32 +68,44 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
       builder: (context) {
         return AlertDialog(
           title: Text("Editar perfil de ${mascota.nombre}"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: edadController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: "Edad (años)",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: edadController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: "Edad (años)",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Por favor, introduce la edad";
+                    }
+                    if (int.parse(value) < 0 || int.parse(value) > 30) {
+                      return "Introduce una edad realista";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 13),
+                TextField(
+                  controller: descController,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    hintText: "Escribe algo sobre tu mascota...",
+                    labelText: "Descripción",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 13),
-              TextField(
-                controller: descController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  hintText: "Escribe algo sobre tu mascota...",
-                  labelText: "Descripción",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -119,29 +118,31 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                 foregroundColor: color.onPrimary,
               ),
               onPressed: () async {
-                final edadInt =
-                    int.tryParse(edadController.text) ?? mascota.edad;
-                final exito = await context
-                    .read<UsuarioProvider>()
-                    .actualizarDatosMascota(
-                      mascota.id!,
-                      descController.text.trim(),
-                      edadInt,
-                    );
+                if (_formKey.currentState!.validate()) {
+                  final edadInt =
+                      int.tryParse(edadController.text) ?? mascota.edad;
+                  final exito = await context
+                      .read<UsuarioProvider>()
+                      .actualizarDatosMascota(
+                        mascota.id!,
+                        descController.text.trim(),
+                        edadInt,
+                      );
 
-                if (exito) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Descripción actualizada correctamente"),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Error al conectar con el servidor"),
-                    ),
-                  );
+                  if (exito) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Descripción actualizada correctamente"),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Error al conectar con el servidor"),
+                      ),
+                    );
+                  }
                 }
               },
               child: Text("GUARDAR"),

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'quedada_model.dart';
+import '../model/quedada_model.dart';
 
 class QuedadaService {
   static const String baseUrl = 'http://10.0.2.2:8081/quedadas';
