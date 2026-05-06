@@ -18,23 +18,19 @@ class QuedadasScreen extends StatefulWidget {
 }
 
 class _QuedadasScreenState extends State<QuedadasScreen> {
-  late Future<List<Quedada>> _futureQuedadas;
 
   @override
   void initState() {
     super.initState();
-    _cargarQuedadas();
-  }
-
-  void _cargarQuedadas() {
-    setState(() {
-      _futureQuedadas = QuedadaService.fetchTodas();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<QuedadaProvider>().cargarTodasLasQuedadas();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UsuarioProvider>();
+    final quedadaProvider = context.watch<QuedadaProvider>();
     final user = userProvider.usuario;
 
     final color = Theme.of(context).colorScheme;
@@ -44,6 +40,19 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
     if (user == null) {
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
+    // FILTRAR EXPIRADAS Y SEPARAR LISTAS
+    final ahora = DateTime.now();
+    final todas = quedadaProvider.listaQuedadas.where((q) => q.fechaHora.isAfter(ahora)).toList();
+
+    // Mis citas: Soy el creador o estoy en la lista de asistentes
+    final misCitas = todas.where((q) =>
+    q.creador?.firebaseUid == user.firebaseUid ||
+        q.usuariosAsistentes.any((u) => u.firebaseUid == user.firebaseUid)
+    ).toList();
+
+    // Explorar: El resto de quedadas futuras donde no participo
+    final explorar = todas.where((q) => !misCitas.contains(q)).toList();
 
     return Scaffold(
       bottomNavigationBar: BottomBar(currentIndex: 2),
@@ -60,19 +69,19 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
         onPressed: () async {
           final result = await Navigator.pushNamed(context, "/form-quedada");
           if (result == true) {
-            _cargarQuedadas();
+            context.read<QuedadaProvider>().cargarTodasLasQuedadas();
           }
         },
         backgroundColor: parkRed,
-        icon: Icon(Icons.add_location_alt_rounded, color: Colors.white),
+        icon: Icon(Icons.add_location_alt_outlined, color: Colors.white),
         label: Text(
-          "Crear quedada",
+          "Proponer quedada",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () async => _cargarQuedadas(),
+          onRefresh: () async => context.read<QuedadaProvider>().cargarTodasLasQuedadas(),
           child: SingleChildScrollView(
             physics: AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.all(20),
@@ -84,27 +93,15 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
 
                 SizedBox(height: 30),
 
-                FutureBuilder<List<Quedada>>(
-                  future: _futureQuedadas,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-
-                    if (snapshot.hasError) {
-                      return _buildErrorWidget(color, snapshot.error.toString());
-                    }
-
-                    final todas = snapshot.data ?? [];
-
-                    final misCitas = todas.where((q) =>
-                    q.creador?.firebaseUid == user.firebaseUid ||
-                        q.usuariosAsistentes.any((u) => u.firebaseUid == user.firebaseUid)
-                    ).toList();
-
-                    final explorar = todas.where((q) => !misCitas.contains(q)).toList();
-
-                    return Column(
+                // Si está cargando y no hay datos todavía
+                if (quedadaProvider.isLoading && todas.isEmpty)
+                  Center(child: CircularProgressIndicator())
+                  // Si hay un error (puedes añadir un bool 'hasError' en tu Provider)
+                else if (quedadaProvider.listaQuedadas.isEmpty && !quedadaProvider.isLoading)
+                  _buildErrorWidget(color, "No se han podido cargar las quedadas")
+                  // Si todo va bien, mostramos las listas
+                else
+                  Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text("Tus citas", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -127,11 +124,11 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
                             child: _buildExplorarCard(context, quedada: q, color: Colors.orange.shade700),
                           )),
                       ],
-                    );
-                  },
-                ),
-              ],
-            ),
+                    )
+                  ],
+            )
+
+
           ),
         ),
       ),
@@ -170,6 +167,8 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
   Widget _buildMiniCard(Quedada q, Color color) {
     final dia = DateFormat('EEEE, d', 'es').format(q.fechaHora);
     final hora = DateFormat.Hm().format(q.fechaHora);
+    // Contador de perros asistentes
+    final totalPerros = q.perrosAsistentes.length;
 
     return Container(
       width: 150,
@@ -186,6 +185,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
           Text(dia.toUpperCase(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
           Text(hora, style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
           Spacer(),
+          Text("$totalPerros perros", style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
           Text(q.lugarNombre, style: TextStyle(color: Colors.white, fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
         ],
       ),
@@ -194,6 +194,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
 
   Widget _buildExplorarCard(BuildContext context, {required Quedada quedada, required Color color}) {
     final hora = DateFormat.Hm().format(quedada.fechaHora);
+    final numeroPerros = quedada.perrosAsistentes.length;
 
     return Container(
       decoration: BoxDecoration(
@@ -211,7 +212,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
               child: Icon(Icons.pets, color: color),
             ),
             title: Text(quedada.titulo, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Didact Gothic', color: Colors.orange.shade700)),
-            subtitle: Text("${quedada.lugarNombre} • ${quedada.perrosAsistentes.length} perros"),
+            subtitle: Text("${quedada.lugarNombre} • $numeroPerros ${numeroPerros == 1 ? 'perro' : 'perros'}"),
             trailing: Text(hora, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 18)),
           ),
           Padding(
@@ -219,7 +220,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Organizador: ${quedada.creador?.nombre ?? 'Usuario'}", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                Text("Organizada por: ${quedada.creador?.nombre ?? 'Usuario'}", style: TextStyle(color: Colors.grey, fontSize: 12)),
                 ElevatedButton(
                   onPressed: () {
                     // MODIFICADO: Ahora cargamos los datos en el Provider antes de navegar
@@ -249,7 +250,9 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
           Icon(Icons.error_outline, color: Colors.red, size: 40),
           SizedBox(height: 10),
           Text("Error al cargar: $error", textAlign: TextAlign.center),
-          TextButton(onPressed: _cargarQuedadas, child: Text("REINTENTAR")),
+          TextButton(
+              onPressed: () => context.read<QuedadaProvider>().cargarTodasLasQuedadas(),
+              child: Text("REINTENTAR")),
         ],
       ),
     );
