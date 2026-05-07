@@ -160,16 +160,20 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     if (_postsCargados) return;
-
     final mascotaArgs = ModalRoute.of(context)!.settings.arguments as Mascota;
+    final miUid = FirebaseAuth.instance.currentUser?.uid;
+    if (miUid != null) {
+      _postsCargados = true;
+      Future.microtask(() {
+        // Llamamos al provider con ambos IDs
+        context.read<UsuarioProvider>().cargarPostsMascota(mascotaArgs.id!, miUid);
+      });
+    }
 
-    _postsCargados = true;
 
-    Future.microtask(() {
-      context.read<UsuarioProvider>().cargarPostsMascota(mascotaArgs.id!);
-    });
+
+
   }
 
   @override

@@ -31,8 +31,8 @@ class PostService {
   }
 
 
-  static Future<List<Post>> fetchPostsByMascota(int mascotaId) async {
-    final uri = Uri.parse("$baseUrl/mascota/$mascotaId");
+  static Future<List<Post>> fetchPostsByMascota(int mascotaId, String usuarioUid) async {
+    final uri = Uri.parse("$baseUrl/mascota/$mascotaId/$usuarioUid");
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       final List data = jsonDecode(res.body);

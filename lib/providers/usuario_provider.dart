@@ -127,9 +127,9 @@ class UsuarioProvider with ChangeNotifier {
   List<Post> _postsMascota = [];
   List<Post> get postsMascota => _postsMascota;
 
-  Future<void> cargarPostsMascota(int mascotaId) async {
+  Future<void> cargarPostsMascota(int mascotaId, String usuarioUid) async {
     try {
-      _postsMascota = await PostService.fetchPostsByMascota(mascotaId);
+      _postsMascota = await PostService.fetchPostsByMascota(mascotaId, usuarioUid);
       notifyListeners();
     } catch (e) {
       print("Error cargando posts mascota: $e");
