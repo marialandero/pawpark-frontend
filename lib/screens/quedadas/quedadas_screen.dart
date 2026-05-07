@@ -96,8 +96,8 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
                 // Si está cargando y no hay datos todavía
                 if (quedadaProvider.isLoading && todas.isEmpty)
                   Center(child: CircularProgressIndicator())
-                  // Si hay un error (puedes añadir un bool 'hasError' en tu Provider)
-                else if (quedadaProvider.listaQuedadas.isEmpty && !quedadaProvider.isLoading)
+                  // Si hay un error (se controla el bool 'hasError' del Provider)
+                else if (quedadaProvider.hasError)
                   _buildErrorWidget(color, "No se han podido cargar las quedadas")
                   // Si todo va bien, mostramos las listas
                 else

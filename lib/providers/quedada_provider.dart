@@ -6,17 +6,23 @@ class QuedadaProvider with ChangeNotifier {
   Quedada? _quedadaSeleccionada;
   List<Quedada> _listaQuedadas = [];
   bool _isLoading = false;
+  bool _hasError = false;
 
+  // Getters para la UI
   Quedada? get quedada => _quedadaSeleccionada;
   List<Quedada> get listaQuedadas => _listaQuedadas;
   bool get isLoading => _isLoading;
+  bool get hasError => _hasError;
 
   Future<void> cargarTodasLasQuedadas() async {
     _isLoading = true;
+    _hasError = false;
     notifyListeners();
     try {
       _listaQuedadas = await QuedadaService.fetchTodas();
+      _hasError = false;
     } catch (e) {
+      _hasError = true;
       debugPrint("Error al cargar quedadas: $e");
     } finally {
       _isLoading = false;

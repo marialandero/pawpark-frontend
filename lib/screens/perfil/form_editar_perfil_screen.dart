@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:pawpark_frontend/api/service/storage_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../api/model/usuario_model.dart';
@@ -336,11 +337,14 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
-    String? nombreImagen = fotoActual;
+    String? urlFotoFirebase = fotoActual;
 
     // Subir imagen si hay nueva
     if (_imagenSeleccionada != null) {
-      nombreImagen = await UsuarioService.uploadFotoPerfil(uid!, _imagenSeleccionada!);
+      urlFotoFirebase = await StorageService.subirImageAFirebase(
+          imagen: XFile(_imagenSeleccionada!.path),
+          carpeta: 'usuarios'
+      );
     }
 
     // Creamos el mapa de datos primero
@@ -348,7 +352,7 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
       'nombre': nombreController.text.trim(),
       'localidad': ubicacionController.text.trim(),
       'descripcion': bioController.text.trim(),
-      'fotoPerfil': nombreImagen,
+      'fotoPerfil': urlFotoFirebase,
       'email': emailController.text.trim(),
       'nickname': emailController.text.split('@')[0],
       'encountersCount': 0,

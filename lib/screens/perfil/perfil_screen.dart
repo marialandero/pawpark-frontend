@@ -251,6 +251,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 user.nombre,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
+              Text(
+                "@${user.nickname}",
+                style: TextStyle(color: color.outline, fontSize: 16),
+              ),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -35,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  "assets/images/logo_pawpark.png",
+                  "assets/images/pawpark_logo.png",
                   height: 250,
                   fit: BoxFit.contain,
                 ),
@@ -43,7 +43,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   "Donde tus mascotas conectan",
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: color.outline,
-                    fontStyle: FontStyle.italic,
+                    // fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.bold
                   ),
                 ),
                 SizedBox(height: 30),

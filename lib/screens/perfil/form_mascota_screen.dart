@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:pawpark_frontend/api/service/mascota_service.dart';
+import 'package:pawpark_frontend/api/service/storage_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../utils/image_helper.dart';
@@ -175,11 +176,14 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
     try {
-      String? nombreFoto;
+      String? urlFotoFirebase;
       // Subir imagen primero si el usuario seleccionó una
       if (imagenSeleccionada != null) {
-        nombreFoto = await MascotaService.subirImagen(imagenSeleccionada!);
-        if (nombreFoto == null) throw Exception("Error al subir la imagen");
+        urlFotoFirebase = await StorageService.subirImageAFirebase(
+            imagen: XFile(imagenSeleccionada!.path),
+            carpeta: 'mascotas'
+        );
+        if (urlFotoFirebase == null) throw Exception("Error al subir a Firebase");
       }
 
       // Preparar el mapa de datos
@@ -188,7 +192,7 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
         'raza': _razaSeleccionadaParaBackend,
         'edad': int.tryParse(edadController.text.trim()) ?? 0,
         'comportamientos': selectedTags,
-        'fotoPerfilMascota': nombreFoto,
+        'fotoPerfilMascota': urlFotoFirebase,
         'duenoFirebaseUid': uid,
       };
 

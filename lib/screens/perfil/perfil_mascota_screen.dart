@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pawpark_frontend/api/service/storage_service.dart';
 import 'package:provider/provider.dart';
 import '../../api/model/mascota_model.dart';
 import '../../api/service/mascota_service.dart';
@@ -34,14 +35,17 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
   Future<void> _subirImagen(Mascota mascota) async {
     if (_imagenSeleccionada == null) return;
 
-    // El Service sube el archivo físico
-    final fileName = await MascotaService.subirImagen(_imagenSeleccionada!);
+    // Subir a Firebase en lugar de usar el servicio local
+    final urlFotoFirebase = await StorageService.subirImageAFirebase(
+        imagen: XFile(_imagenSeleccionada!.path),
+        carpeta: 'mascotas'
+    );
 
-    if (fileName != null) {
-      // El Provider actualiza la base de datos y notifica cambios
+    if (urlFotoFirebase != null) {
+      // Notificamos al Provider pasándole la URL de Firebase
       await context.read<UsuarioProvider>().actualizarFotoMascota(
         mascota.id!,
-        fileName,
+        urlFotoFirebase, // Ahora el Backend recibirá el String de la URL
       );
 
       await context.read<UsuarioProvider>().recargarUsuario();
@@ -372,7 +376,7 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
 
                       SizedBox(height: 30),
 
-                      // Espacio para la futura Galería (Posts)
+                      // Espacio para la Galería (Posts)
                       Divider(),
                       SizedBox(height: 10),
 
@@ -413,9 +417,8 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                                   ),
                               itemBuilder: (context, index) {
                                 final post = postsMascota[index];
-                                final url = post.rutaImagen.startsWith("http")
-                                    ? post.rutaImagen
-                                    : "http://10.0.2.2:8081/uploads/${post.rutaImagen}";
+                                // USAMOS EL HELPER: Él ya sabe si poner la URL de Firebase, la de local o la de defecto
+                                final url = ImageHelper.pet(post.rutaImagen);
 
                                 return GestureDetector(
                                   onTap: () => _verImagenAmpliada(context, url),
@@ -424,6 +427,10 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                                     child: Image.network(
                                       url,
                                       fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => Container(
+                                        color: Colors.grey[200],
+                                        child: Icon(Icons.pets, color: Colors.grey)
+                                      ),
                                     ),
                                   ),
                                 );

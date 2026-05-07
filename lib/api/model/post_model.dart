@@ -3,6 +3,7 @@ class Post {
   final String rutaImagen;
   final String descripcion;
   final String autorNombre;
+  final String autorNickname;
   final String autorUid;
   final List<String> mascotasNombres;
   final String? autorFotoPerfil;
@@ -15,6 +16,7 @@ class Post {
     required this.rutaImagen,
     required this.descripcion,
     required this.autorNombre,
+    required this.autorNickname,
     required this.autorUid,
     required this.mascotasNombres,
     this.liked = false,
@@ -28,6 +30,7 @@ class Post {
       rutaImagen: json["rutaImagen"] ?? "",
       descripcion: json["descripcion"] ?? "",
       autorNombre: json["autorNombre"] ?? "",
+      autorNickname: json["autorNickname"] ?? "",
       autorUid: json["autorUid"] ?? "",
       autorFotoPerfil: json["autorFotoPerfil"],
       mascotasNombres: List<String>.from(json["mascotasNombres"] ?? []),

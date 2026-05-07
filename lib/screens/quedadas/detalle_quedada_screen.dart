@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pawpark_frontend/api/service/usuario_service.dart';
+import 'package:pawpark_frontend/widgets/avatar_perfil.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/quedada_provider.dart';
@@ -48,7 +50,7 @@ class DetalleQuedadaScreen extends StatelessWidget {
             SizedBox(height: 30),
             Text("Asistentes confirmados", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 15),
-            _buildListaAsistentes(q),
+            _buildListaAsistentes(context, q, user),
           ],
         ),
       ),
@@ -71,13 +73,30 @@ class DetalleQuedadaScreen extends StatelessWidget {
 
   Widget _infoRow(IconData icon, String text) => Row(children: [Icon(icon, size: 18), const SizedBox(width: 8), Text(text)]);
 
-  Widget _buildListaAsistentes(dynamic q) {
+  Widget _buildListaAsistentes(BuildContext context, dynamic q, dynamic currentUser) {
     return Column(
       children: q.usuariosAsistentes.map<Widget>((u) {
         // Obtenemos los nombres de los perros de este usuario que están en la quedada
         final perros = q.perrosAsistentes.where((p) => p.duenoFirebaseUid == u.firebaseUid).map((p) => p.nombre).join(", ");
         return ListTile(
-          leading: CircleAvatar(child: Icon(Icons.person)),
+          onTap: () async {
+            if (currentUser.firebaseUid == u.firebaseUid) {
+              Navigator.pushNamed(context, "/perfil");
+            } else {
+              final usuarioAjeno = await UsuarioService.fetchPerfil(u.firebaseUid);
+              if (context.mounted) {
+                Navigator.pushNamed(
+                  context,
+                  "perfil",
+                  arguments: usuarioAjeno
+                );
+              }
+            }
+          },
+          leading: AvatarPerfil(
+            urlImagen: u.fotoPerfil,
+            radio: 20,
+          ),
           title: Text(u.nombre, style: TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(perros.isNotEmpty ? "Viene con: $perros" : "Viene solo/a"),
         );

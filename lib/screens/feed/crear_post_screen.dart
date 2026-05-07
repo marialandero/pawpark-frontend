@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pawpark_frontend/api/service/storage_service.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/post_provider.dart';
@@ -17,15 +18,12 @@ class CrearPostScreen extends StatefulWidget {
 class _CrearPostScreenState extends State<CrearPostScreen> {
 
   final TextEditingController descripcionController = TextEditingController();
-
   File? imagenSeleccionada;
   final picker = ImagePicker();
-
   List<Mascota> mascotasSeleccionadas = [];
 
   Future<void> pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
-
     if (picked != null) {
       setState(() {
         imagenSeleccionada = File(picked.path);
@@ -44,22 +42,39 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
       return;
     }
 
-    final success = await postProvider.crearPost(
-      imagen: imagenSeleccionada!,
-      uid: user!.firebaseUid,
-      descripcion: descripcionController.text,
-      mascotasIds: mascotasSeleccionadas
-          .where((m) => m.id != null)
-          .map((m) => m.id!)
-          .toList(),
-    );
+    try{
+      // Sube la imagen a Firebase
+      // Usamos la carpeta 'posts' para organizar el storage
+      final String? urlImagen = await StorageService.subirImageAFirebase(
+          imagen: XFile(imagenSeleccionada!.path),
+          carpeta: 'posts'
+      );
 
-    if (success && mounted) {
-      Navigator.pop(context);
+      if (urlImagen == null) {
+        throw Exception("No se pudo subir la imagen a Firebase");
+      }
+      // Llamamos al Provider
+      final success = await postProvider.crearPost(
+          rutaImagen: urlImagen,
+          uid: user!.firebaseUid,
+          descripcion: descripcionController.text,
+          mascotasIds: mascotasSeleccionadas.where((m) => m.id != null).map((m) => m.id!).toList()
+      );
+      if (success && mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("¡Post publicado!")),
+        );
+      }
+    } catch (e) {
+      // Manejo de errores durante la subido o creación
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("¡Post publicado!")),
+        SnackBar(content: Text("Error al publicar: $e"))
       );
     }
+
+
+
   }
 
   @override

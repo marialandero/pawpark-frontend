@@ -36,7 +36,7 @@ class PostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          /// 👤 HEADER
+          // HEADER (Nombre + @Nickname)
           ListTile(
             contentPadding: EdgeInsets.all(15),
 
@@ -62,12 +62,28 @@ class PostCard extends StatelessWidget {
                   );
                 
               },
-              child: Text(
-                post.autorNombre,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold
-                ),
-              ),
+              child: RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: [
+                      TextSpan(
+                        text: post.autorNombre,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17
+                        )
+                      ),
+                      TextSpan(
+                        text: " @${post.autorNickname}",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400
+                        )
+                      )
+                    ]
+                  )
+              )
             ),
 
             subtitle: post.mascotasNombres.isEmpty
@@ -76,12 +92,12 @@ class PostCard extends StatelessWidget {
               "con ${post.mascotasNombres.join(', ')}",
               style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.blueGrey[700],
+                color: Colors.blueGrey[600],
               ),
             ),
           ),
 
-          /// 🖼️ IMAGEN
+          /// Imagen
           AspectRatio(
             aspectRatio: 1,
             child: Image.network(
@@ -95,7 +111,7 @@ class PostCard extends StatelessWidget {
             ),
           ),
 
-          /// ❤️ LIKE
+          // Likes
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             child: Row(
@@ -116,12 +132,13 @@ class PostCard extends StatelessWidget {
             ),
           ),
 
-          /// 📝 DESCRIPCIÓN
+          // Descripción
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 15),
             child: Text(
               post.descripcion,
               style: TextStyle(
+                fontSize: 15,
                 color: Colors.blueGrey[600],
                 height: 1.4,
               ),

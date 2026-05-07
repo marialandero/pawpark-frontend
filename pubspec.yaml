@@ -45,6 +45,7 @@ dependencies:
   image_picker: ^1.2.1
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
+  firebase_storage: ^13.3.0
 
 dev_dependencies:
   flutter_test:
@@ -71,15 +72,11 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/logo_pawpark.png
-    - assets/images/pawpark_logo.png
     - assets/images/dog_default.png
     - assets/images/person_default.png
     - assets/images/mapa_falso.png
-    - assets/images/pawpark_app.png
-    - assets/images/paw_park.png
-    - assets/images/prueba_logo.png
-    - assets/images/logo.png
-    - assets/images/logo_paw_park.png
+    - assets/images/logo_pawpark2.png
+    - assets/images/pawpark_logo.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -178,7 +178,7 @@ class MaterialTheme {
       onPrimary: Color(0xff03181e),
       primaryContainer: Color(0xff004c69),
       onPrimaryContainer: Color(0xffc3e7ff),
-      secondary: Color(0xff98263b),
+      secondary: Color(0xffe14342),
       onSecondary: Color(0xff561d21),
       secondaryContainer: Color(0xff733336),
       onSecondaryContainer: Color(0xffffdad9),

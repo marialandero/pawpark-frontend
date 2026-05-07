@@ -25,7 +25,7 @@ class PostProvider extends ChangeNotifier {
   }
 
   Future<bool> crearPost({
-    required File imagen,
+    required String rutaImagen,
     required String uid,
     required String descripcion,
     required List<int> mascotasIds,
@@ -35,13 +35,10 @@ class PostProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      /// 1. subes imagen
-      final imageUrl = await PostService.uploadImage(imagen);
 
-      /// 2. creas post
       final success = await PostService.crearPost({
         "firebaseUidAutor": uid,
-        "rutaImagen": imageUrl,
+        "rutaImagen": rutaImagen,
         "descripcion": descripcion,
         "mascotasIds": mascotasIds,
       });
@@ -53,7 +50,7 @@ class PostProvider extends ChangeNotifier {
       return success;
 
     } catch (e) {
-      debugPrint("Error crear post: $e");
+      debugPrint("Error en Provider: $e");
       return false;
     } finally {
       isLoading = false;
