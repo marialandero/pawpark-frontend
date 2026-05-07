@@ -121,6 +121,7 @@ class _FeedScreenState extends State<FeedScreen> {
                     print("FOTO AUTOR: ${post.autorFotoPerfil}"); // 👈 AQUÍ
 
                     return PostCard(
+                      key: ValueKey(post.id),
                       post: post,
                       color: color,
                       user: user,

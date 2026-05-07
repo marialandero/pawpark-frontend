@@ -170,10 +170,6 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
         context.read<UsuarioProvider>().cargarPostsMascota(mascotaArgs.id!, miUid);
       });
     }
-
-
-
-
   }
 
   @override

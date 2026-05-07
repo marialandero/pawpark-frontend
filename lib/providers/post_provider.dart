@@ -12,7 +12,6 @@ class PostProvider extends ChangeNotifier {
   Future<void> cargarFeed(String usuarioUid) async {
     print("Cargando feed para UID: $usuarioUid");
     isLoading = true;
-    posts = []; // Limpiamos la lista vieja para forzar el redibujado
     notifyListeners();
 
     try {
@@ -26,9 +25,6 @@ class PostProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
-
-    isLoading = false;
-    notifyListeners();
   }
 
   Future<bool> crearPost({

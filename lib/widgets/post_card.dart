@@ -114,21 +114,32 @@ class PostCard extends StatelessWidget {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  onPressed: () {
-                    context.read<PostProvider>().toggleLike(post.id, user!.firebaseUid);
-                  },
-                  icon: Icon(
-                    post.liked ? Icons.favorite : Icons.favorite_border,
-                    color: post.liked ? color.secondary : Colors.grey,
-                  ),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        context.read<PostProvider>().toggleLike(post.id, user!.firebaseUid);
+                      },
+                      icon: Icon(
+                        post.liked ? Icons.favorite : Icons.favorite_border,
+                        color: post.liked ? color.secondary : Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      "${post.likes} personas",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-
-                Text(
-                  "${post.likes}",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                if (user?.firebaseUid == post.autorUid)
+                  IconButton(
+                    onPressed: () => _mostrarDialogoBorrar(context),
+                    icon: Icon(Icons.delete_sweep_outlined),
+                    color: Colors.grey,
+                    iconSize: 26,
+                  )
               ],
             ),
           ),
@@ -166,5 +177,37 @@ class PostCard extends StatelessWidget {
         );
       }
     }
+  }
+
+  // DIÁLOGO DE CONFIRMACIÓN PARA BORRAR
+  void _mostrarDialogoBorrar(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+        title: Text("¿Eliminar publicación?"),
+        content: Text(
+            "Esta acción no se puede deshacer y la foto desaparecerá de las galerías de las mascotas etiquetadas."
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text("CANCELAR", style: TextStyle(color: color.surfaceTint)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx); // Cerramos el diálogo
+              final success = await context.read<PostProvider>().eliminarPost(post.id);
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Post eliminado correctamente")),
+                );
+              }
+            },
+            child: Text("ELIMINAR",style: TextStyle(color: color.onErrorContainer)),
+          ),
+        ],
+      ),
+    );
   }
 }
