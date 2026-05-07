@@ -87,7 +87,7 @@ class DetalleQuedadaScreen extends StatelessWidget {
               if (context.mounted) {
                 Navigator.pushNamed(
                   context,
-                  "perfil",
+                  "/perfil",
                   arguments: usuarioAjeno
                 );
               }

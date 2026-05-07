@@ -21,6 +21,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
   File? imagenSeleccionada;
   final picker = ImagePicker();
   List<Mascota> mascotasSeleccionadas = [];
+  bool _enviando = false;
 
   Future<void> pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -32,6 +33,8 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
   }
 
   Future<void> publicarPost() async {
+    // Si ya estamos enviando, salimos para evitar duplicados
+    if (_enviando) return;
     final user = context.read<UsuarioProvider>().usuario;
     final postProvider = context.read<PostProvider>();
 
@@ -41,7 +44,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
       );
       return;
     }
-
+    setState(() => _enviando = true); // Para que el botón muestre el loading
     try{
       // Sube la imagen a Firebase
       // Usamos la carpeta 'posts' para organizar el storage
@@ -61,20 +64,25 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
           mascotasIds: mascotasSeleccionadas.where((m) => m.id != null).map((m) => m.id!).toList()
       );
       if (success && mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Post publicado!")),
-        );
+        // Antes de cerrar la pantalla, obligamos al Provider a traer la lista nueva del Backend
+        await postProvider.cargarFeed(user.firebaseUid);
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("¡Post publicado!")),
+          );
+        }
       }
     } catch (e) {
-      // Manejo de errores durante la subido o creación
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al publicar: $e"))
-      );
+      if (mounted) {
+        // Manejo de errores durante la subido o creación
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error al publicar: $e"))
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _enviando = false);
     }
-
-
-
   }
 
   @override
@@ -86,7 +94,8 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Nuevo post"),
+        title: Text("Nuevo post",
+        style: TextStyle(fontWeight: FontWeight.bold),),
       ),
 
       body: SafeArea(
@@ -146,7 +155,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
                   
               const SizedBox(height: 20),
                   
-              /// 🐶 MASCOTAS
+              // Mascotas
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -198,21 +207,22 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
                     [],
               ),
                 SizedBox(height: 30),
-              /// 🚀 BOTÓN
+              // Botón
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: postProvider.isLoading
+                  onPressed: (_enviando || postProvider.isLoading)
                       ? null
                       : publicarPost,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: color.primary,
+                    disabledBackgroundColor: Colors.grey[300],
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
                   ),
-                  child: postProvider.isLoading
+                  child: (_enviando || postProvider.isLoading)
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
                     "PUBLICAR",

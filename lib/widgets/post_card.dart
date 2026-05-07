@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pawpark_frontend/api/service/usuario_service.dart';
+import 'package:pawpark_frontend/providers/post_provider.dart';
+import 'package:provider/provider.dart';
 import '../api/model/post_model.dart';
 import 'avatar_perfil.dart';
 import '../utils/image_helper.dart';
@@ -37,67 +39,64 @@ class PostCard extends StatelessWidget {
         children: [
 
           // HEADER (Nombre + @Nickname)
-          ListTile(
-            contentPadding: EdgeInsets.all(15),
-
-            leading: AvatarPerfil(
-              urlImagen: ImageHelper.user(post.autorFotoPerfil), // Usamos la URL de la foto del autor del post
-              radio: 22, // Ajustamos el tamaño para la cabecera
-            ),
-
-            title: GestureDetector(
-              onTap: () async {
-                // Si el UID del autor es el mismo que el del usuario logueado
-                if (user?.firebaseUid == post.autorUid) {
-                  Navigator.pushNamed(context, "/perfil");
-                  return;
-                } 
-                final usuarioAjeno = await UsuarioService.fetchPerfil(post.autorUid);
-                  // Si es un perfil ajeno, navegamos a la misma pantalla "/perfil"
-                  // pero pasando el UID o el objeto autor para que PerfilScreen lo gestione
-                  Navigator.pushNamed(
-                    context,
-                    "/perfil",
-                    arguments: usuarioAjeno,
-                  );
-                
-              },
-              child: RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: [
-                      TextSpan(
-                        text: post.autorNombre,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17
-                        )
-                      ),
-                      TextSpan(
-                        text: " @${post.autorNickname}",
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400
-                        )
+          InkWell(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            onTap: () => _navegarAlPerfil(context), // Navega toda la cabecera
+            child: Padding(
+                padding: EdgeInsets.all(15),
+              child: Row(
+                children: [
+                  AvatarPerfil(
+                    urlImagen: ImageHelper.user(post.autorFotoPerfil), // Usamos la URL de la foto del autor del post
+                    radio: 22, // Ajustamos el tamaño para la cabecera
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+    RichText(
+    text: TextSpan(
+    style: DefaultTextStyle.of(context).style,
+    children: [
+    TextSpan(
+    text: post.autorNombre,
+    style: TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 16
+    )
+    ),
+    TextSpan(
+    text: " @${post.autorNickname}",
+    style: TextStyle(
+    color: Colors.grey[600],
+    fontSize: 14,
+    fontWeight: FontWeight.w400
+    )
+    )
+    ]
+    )
+    ),
+    SizedBox(height: 2),
+    Text(
+    post.mascotasNombres.isEmpty
+    ? "🐾"
+        : "con ${post.mascotasNombres.join(', ')}",
+    style: TextStyle(
+    fontWeight: FontWeight.w500,
+    color: Colors.blueGrey[600],
+    ),
+    )
+    ],
                       )
-                    ]
-                  )
-              )
-            ),
-
-            subtitle: post.mascotasNombres.isEmpty
-                ? Text("🐾")
-                : Text(
-              "con ${post.mascotasNombres.join(', ')}",
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.blueGrey[600],
+                  ),
+                ],
               ),
             ),
-          ),
 
-          /// Imagen
+
+            ),
+          // Imagen
           AspectRatio(
             aspectRatio: 1,
             child: Image.network(
@@ -111,13 +110,15 @@ class PostCard extends StatelessWidget {
             ),
           ),
 
-          // Likes
+          // Likes persistentes
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             child: Row(
               children: [
                 IconButton(
-                  onPressed: onLike,
+                  onPressed: () {
+                    context.read<PostProvider>().toggleLike(post.id, user!.firebaseUid);
+                  },
                   icon: Icon(
                     post.liked ? Icons.favorite : Icons.favorite_border,
                     color: post.liked ? color.secondary : Colors.grey,
@@ -149,5 +150,21 @@ class PostCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Método para la navegación
+  void _navegarAlPerfil(BuildContext context) async {
+    if (user?.firebaseUid == post.autorUid) {
+      Navigator.pushNamed(context, "/perfil");
+    } else {
+      final usuarioAjeno = await UsuarioService.fetchPerfil(post.autorUid);
+      if (context.mounted) {
+        Navigator.pushNamed(
+          context,
+          "/perfil",
+          arguments: usuarioAjeno,
+        );
+      }
+    }
   }
 }

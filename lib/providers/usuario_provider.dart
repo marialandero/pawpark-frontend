@@ -17,6 +17,7 @@ class UsuarioProvider with ChangeNotifier {
   List<Usuario> _usuarios = [];
   List<Usuario> get usuarios => _usuarios;
 
+
   // Carga inicial (llamar al hacer Login)
   Future<void> cargarUsuario(String uid) async {
     _isLoading = true;
@@ -34,6 +35,7 @@ class UsuarioProvider with ChangeNotifier {
     }
   }
 
+
   Future<List<Usuario>> buscarUsuarios(String query) async {
     try {
       return await UsuarioService.buscarUsuarios(query);
@@ -43,6 +45,7 @@ class UsuarioProvider with ChangeNotifier {
     }
   }
 
+
   // Limpia el rastro del usuario anterior
   void limpiarUsuario() {
     _usuario = null;
@@ -50,11 +53,13 @@ class UsuarioProvider with ChangeNotifier {
     notifyListeners();
   }
 
+
   // Para actualizar datos del perfil
   void actualizarDatosLocales(Usuario nuevoUsuario) {
     _usuario = nuevoUsuario;
     notifyListeners(); // Esto refresca TODAS las pantallas abiertas
   }
+
 
   Future<bool> actualizarDatosMascota(int mascotaId, String nuevaDesc, int nuevaEdad) async {
     // Aquí asumo que tu MascotaService.update tiene estos dos parámetros o que usas un Map
@@ -64,10 +69,8 @@ class UsuarioProvider with ChangeNotifier {
         descripcion: nuevaDesc,
         edad: nuevaEdad
     );
-
     if (mascotaActualizada != null && _usuario != null) {
       final index = _usuario!.mascotas.indexWhere((m) => m.id == mascotaId);
-
       if (index != -1) {
         _usuario!.mascotas[index] = mascotaActualizada;
         notifyListeners();
@@ -77,10 +80,6 @@ class UsuarioProvider with ChangeNotifier {
     return false;
   }
 
-  Future<void> cargarUsuarios() async {
-    _usuarios = await UsuarioService.fetchTodos(); // tendrás que crear esto
-    notifyListeners();
-  }
 
   // Actualizar foto mascota (backend + estado)
   Future<void> actualizarFotoMascota(
@@ -93,35 +92,37 @@ class UsuarioProvider with ChangeNotifier {
         mascotaId,
         nuevaFoto,
       );
-
       if (mascotaActualizada == null) return;
-
       if (_usuario == null) return;
-
       final index = _usuario!.mascotas.indexWhere(
             (m) => m.id == mascotaId,
       );
-
       if (index == -1) return;
-
       // reemplazo seguro del objeto
       _usuario!.mascotas[index] = mascotaActualizada;
-
       notifyListeners(); // refresca UI global
     } catch (e) {
       print("Error provider actualizarFotoMascota: $e");
     }
   }
 
+
   Future<void> recargarUsuario() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    // Forzamos la carga desde nuestro backend
+    final usuarioDesdeJava = await UsuarioService.fetchPerfil(user.uid);
 
-    final usuario = await UsuarioService.fetchPerfil(uid);
-
-    _usuario = usuario;
-    notifyListeners();
+    if (usuarioDesdeJava != null) {
+      _usuario = usuarioDesdeJava;
+      if (user.displayName != usuarioDesdeJava.nickname) {
+        await user.updateDisplayName(usuarioDesdeJava.nickname);
+      }
+      debugPrint("Nickname recuperado de DB: ${_usuario?.nickname}");
+      notifyListeners();
+    }
   }
+
 
   List<Post> _postsMascota = [];
   List<Post> get postsMascota => _postsMascota;
@@ -135,14 +136,15 @@ class UsuarioProvider with ChangeNotifier {
     }
   }
 
+
   Future<void> eliminarMascota(int id) async {
     final ok = await MascotaService.eliminarMascota(id);
-
     if (ok && _usuario != null) {
       _usuario!.mascotas.removeWhere((m) => m.id == id);
       notifyListeners();
     }
   }
+
 
   Future<void> alternarSeguimiento(String targetUid) async {
     if (usuario == null) return;
@@ -155,6 +157,7 @@ class UsuarioProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
 
   Future<void> alternarMascotaFavorita(int mascotaId) async {
     if (usuario == null) return;

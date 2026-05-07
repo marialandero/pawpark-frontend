@@ -9,15 +9,22 @@ class PostProvider extends ChangeNotifier {
   List<Post> posts = [];
   bool isLoading = false;
 
-  Future<void> cargarFeed() async {
+  Future<void> cargarFeed(String usuarioUid) async {
+    print("Cargando feed para UID: $usuarioUid");
     isLoading = true;
+    posts = []; // Limpiamos la lista vieja para forzar el redibujado
     notifyListeners();
 
     try {
       // Recibimos la lista ya mapeada desde el service
-      posts = await PostService.fetchFeed();
+      final nuevosPosts = await PostService.fetchFeed(usuarioUid);
+      posts = nuevosPosts;
+      print("Posts recibidos: ${posts.length}");
     } catch (e) {
       debugPrint("Error feed: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
 
     isLoading = false;
@@ -44,7 +51,10 @@ class PostProvider extends ChangeNotifier {
       });
 
       if (success) {
-        await cargarFeed();
+        // ESPERA DE SEGURIDAD: 500ms son imperceptibles para el usuario
+        // pero vitales para que MySQL termine su trabajo.
+        await Future.delayed(const Duration(milliseconds: 500));
+        await cargarFeed(uid);
       }
 
       return success;
@@ -58,9 +68,52 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
-  void toggleLikeLocal(Post post) {
+  /// ❤️ NUEVO MÉTODO: Toggle Like con persistencia en Backend
+  Future<void> toggleLike(int postId, String usuarioUid) async {
+    // 1. Buscamos el post en la lista local
+    final index = posts.indexWhere((p) => p.id == postId);
+    if (index == -1) return;
+
+    final post = posts[index];
+
+    // 2. ACTUALIZACIÓN OPTIMISTA: Cambiamos la UI antes de la respuesta del servidor
+    // para que la app se sienta rápida (sin lag en el corazón)
     post.liked = !post.liked;
     post.liked ? post.likes++ : post.likes--;
     notifyListeners();
+
+    try {
+      // 3. Petición real al servidor
+      final success = await PostService.toggleLike(postId, usuarioUid);
+
+      if (!success) {
+        // Si el servidor responde error, revertimos el cambio local
+        _revertirLike(post);
+      }
+    } catch (e) {
+      debugPrint("Error al sincronizar like: $e");
+      _revertirLike(post);
+    }
+  }
+
+  // Método privado para revertir en caso de error de red
+  void _revertirLike(Post post) {
+    post.liked = !post.liked;
+    post.liked ? post.likes++ : post.likes--;
+    notifyListeners();
+  }
+
+  /// 🗑️ PRÓXIMO PASO: Eliminar Post (Para tu lista de tareas)
+  Future<bool> eliminarPost(int postId) async {
+    try {
+      final success = await PostService.eliminarPost(postId);
+      if (success) {
+        posts.removeWhere((p) => p.id == postId);
+        notifyListeners();
+      }
+      return success;
+    } catch (e) {
+      return false;
+    }
   }
 }

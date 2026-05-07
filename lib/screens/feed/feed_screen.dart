@@ -19,9 +19,12 @@ class _FeedScreenState extends State<FeedScreen> {
   @override
   void initState() {
     super.initState();
-
-    Future.microtask(() {
-      context.read<PostProvider>().cargarFeed();
+    // Usamos addPostFrameCallback que es más seguro que microtask para contextos
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final uid = context.read<UsuarioProvider>().usuario?.firebaseUid;
+      if (uid != null) {
+        context.read<PostProvider>().cargarFeed(uid);
+      }
     });
   }
 
@@ -94,7 +97,12 @@ class _FeedScreenState extends State<FeedScreen> {
             /// FEED
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () => context.read<PostProvider>().cargarFeed(),
+                onRefresh: () async {
+                  final uid = context.read<UsuarioProvider>().usuario?.firebaseUid;
+                  if (uid != null) {
+                    await context.read<PostProvider>().cargarFeed(uid);
+                  }
+                },
 
                 child: postProvider.isLoading
                     ? Center(child: CircularProgressIndicator())
@@ -117,8 +125,7 @@ class _FeedScreenState extends State<FeedScreen> {
                       color: color,
                       user: user,
                       onLike: () {
-                        // 🔥 temporal: si aún no tienes backend de likes
-                        context.read<PostProvider>().toggleLikeLocal(post);
+                        context.read<PostProvider>().toggleLike(post.id, user!.firebaseUid);
                       },
                     );
                   },

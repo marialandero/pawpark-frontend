@@ -336,6 +336,7 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
     setState(() => isSaving = true);
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    final userProvider = context.read<UsuarioProvider>();
 
     String? urlFotoFirebase = fotoActual;
 
@@ -354,7 +355,7 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
       'descripcion': bioController.text.trim(),
       'fotoPerfil': urlFotoFirebase,
       'email': emailController.text.trim(),
-      'nickname': emailController.text.split('@')[0],
+      'nickname': userProvider.usuario!.nickname,
       'encountersCount': 0,
       // Tienen que existir estos campos en Usuario.java
     };

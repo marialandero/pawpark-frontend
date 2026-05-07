@@ -290,6 +290,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
 
       if (userCredential.user != null) {
+        await userCredential.user!.updateDisplayName(nicknameController.text.trim());
         final datosParaBackend = {
           'firebaseUid': userCredential.user!.uid,
           'nombre': nameController.text.trim(),

@@ -34,7 +34,8 @@ class Post {
       autorUid: json["autorUid"] ?? "",
       autorFotoPerfil: json["autorFotoPerfil"],
       mascotasNombres: List<String>.from(json["mascotasNombres"] ?? []),
-
+      liked: json["liked"] ?? false,
+      likes: json["likes"] ?? 0,
     );
   }
 }
