@@ -57,6 +57,17 @@ class PostService {
   }
 
 
+  static Future<List<dynamic>> fetchLikers(int postId) async {
+    final uri = Uri.parse("$baseUrl/$postId/likers");
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body); // Devolvemos la lista de mapas (JSON)
+    } else {
+      throw Exception("Error al obtener los likes");
+    }
+  }
+
+
   // ELIMINAR POST
   static Future<bool> eliminarPost(int postId) async {
     try {

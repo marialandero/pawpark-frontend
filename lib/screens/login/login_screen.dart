@@ -139,10 +139,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: pawBlue,
                               foregroundColor: color.onPrimary,
+                              disabledBackgroundColor: Colors.grey[300],
+                              disabledForegroundColor: Colors.grey[600],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              elevation: 3,
+                              elevation: isLoading ? 0 : 3,
                             ),
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
@@ -191,6 +193,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void login() async {
+    setState(() {
+      errorMessage = '';
+      isLoading = true;
+    });
     try {
       // Autenticamos con Firebase
       UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -217,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
         errorMessage = "Error de conexión con el servidor";
       });
     } finally {
-      if (mounted) setState(() => isLoading = false); // Terminamos de cargar pase lo que pase
+      if (mounted) setState(() => isLoading = false); // Liberamos el botón pase lo que pase
     }
   }
 }

@@ -8,6 +8,14 @@ class PostProvider extends ChangeNotifier {
   // La lista solo aceptará objetos tipo Post
   List<Post> posts = [];
   bool isLoading = false;
+  int? _postIdSeleccionado;
+
+  int? get postIdSeleccionado => _postIdSeleccionado;
+  set postIdSeleccionado(int? id) {
+    _postIdSeleccionado = id;
+    // No hace falta notifyListeners porque esto es solo un almacén de datos temporal
+  }
+
 
   Future<void> cargarFeed(String usuarioUid) async {
     print("Cargando feed para UID: $usuarioUid");

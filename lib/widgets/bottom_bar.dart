@@ -43,7 +43,7 @@ class BottomBar extends StatelessWidget {
       },
       items: [
         BottomNavigationBarItem(icon: Icon(Icons.map), label: "Mapa"),
-        BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Feed"),
+        BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: "Muro"),
         BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "Quedadas"),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
       ],

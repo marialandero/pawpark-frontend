@@ -28,74 +28,68 @@ class PostCard extends StatelessWidget {
         color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          )
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           // HEADER (Nombre + @Nickname)
           InkWell(
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             onTap: () => _navegarAlPerfil(context), // Navega toda la cabecera
             child: Padding(
-                padding: EdgeInsets.all(15),
+              padding: EdgeInsets.all(15),
               child: Row(
                 children: [
                   AvatarPerfil(
-                    urlImagen: ImageHelper.user(post.autorFotoPerfil), // Usamos la URL de la foto del autor del post
+                    urlImagen: ImageHelper.user(post.autorFotoPerfil),
+                    // Usamos la URL de la foto del autor del post
                     radio: 22, // Ajustamos el tamaño para la cabecera
                   ),
                   SizedBox(width: 12),
                   Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-    RichText(
-    text: TextSpan(
-    style: DefaultTextStyle.of(context).style,
-    children: [
-    TextSpan(
-    text: post.autorNombre,
-    style: TextStyle(
-    fontWeight: FontWeight.bold,
-    fontSize: 16
-    )
-    ),
-    TextSpan(
-    text: " @${post.autorNickname}",
-    style: TextStyle(
-    color: Colors.grey[600],
-    fontSize: 14,
-    fontWeight: FontWeight.w400
-    )
-    )
-    ]
-    )
-    ),
-    SizedBox(height: 2),
-    Text(
-    post.mascotasNombres.isEmpty
-    ? "🐾"
-        : "con ${post.mascotasNombres.join(', ')}",
-    style: TextStyle(
-    fontWeight: FontWeight.w500,
-    color: Colors.blueGrey[600],
-    ),
-    )
-    ],
-                      )
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            style: DefaultTextStyle.of(context).style,
+                            children: [
+                              TextSpan(
+                                text: post.autorNombre,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              TextSpan(
+                                text: " @${post.autorNickname}",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          post.mascotasNombres.isEmpty
+                              ? "🐾"
+                              : "con ${post.mascotasNombres.join(', ')}",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-
-
-            ),
+          ),
           // Imagen
           AspectRatio(
             aspectRatio: 1,
@@ -120,16 +114,28 @@ class PostCard extends StatelessWidget {
                   children: [
                     IconButton(
                       onPressed: () {
-                        context.read<PostProvider>().toggleLike(post.id, user!.firebaseUid);
+                        context.read<PostProvider>().toggleLike(
+                          post.id,
+                          user!.firebaseUid,
+                        );
                       },
                       icon: Icon(
                         post.liked ? Icons.favorite : Icons.favorite_border,
                         color: post.liked ? color.secondary : Colors.grey,
                       ),
                     ),
-                    Text(
-                      "${post.likes} personas",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    GestureDetector(
+                      onTap: () {
+                        // Guardamos el ID en el provider para que la pantalla 'Likers' lo sepa
+                        final provider = Provider.of<PostProvider>(context, listen: false);
+                        provider.postIdSeleccionado = post.id;
+                        print("Navegando a likers para el post ID: ${post.id}");
+                        Navigator.pushNamed(context, "/likers");
+                      },
+                      child: Text(
+                        "${post.likes} personas",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
@@ -139,7 +145,7 @@ class PostCard extends StatelessWidget {
                     icon: Icon(Icons.delete_sweep_outlined),
                     color: Colors.grey,
                     iconSize: 26,
-                  )
+                  ),
               ],
             ),
           ),
@@ -170,11 +176,7 @@ class PostCard extends StatelessWidget {
     } else {
       final usuarioAjeno = await UsuarioService.fetchPerfil(post.autorUid);
       if (context.mounted) {
-        Navigator.pushNamed(
-          context,
-          "/perfil",
-          arguments: usuarioAjeno,
-        );
+        Navigator.pushNamed(context, "/perfil", arguments: usuarioAjeno);
       }
     }
   }
@@ -187,7 +189,7 @@ class PostCard extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.surfaceDim,
         title: Text("¿Eliminar publicación?"),
         content: Text(
-            "Esta acción no se puede deshacer y la foto desaparecerá de las galerías de las mascotas etiquetadas."
+          "Esta acción no se puede deshacer y la foto desaparecerá de las galerías de las mascotas etiquetadas.",
         ),
         actions: [
           TextButton(
@@ -197,14 +199,19 @@ class PostCard extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx); // Cerramos el diálogo
-              final success = await context.read<PostProvider>().eliminarPost(post.id);
+              final success = await context.read<PostProvider>().eliminarPost(
+                post.id,
+              );
               if (success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Post eliminado correctamente")),
                 );
               }
             },
-            child: Text("ELIMINAR",style: TextStyle(color: color.onErrorContainer)),
+            child: Text(
+              "ELIMINAR",
+              style: TextStyle(color: color.onErrorContainer),
+            ),
           ),
         ],
       ),

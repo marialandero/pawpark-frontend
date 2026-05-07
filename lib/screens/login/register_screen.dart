@@ -222,10 +222,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: pawBlue,
                                 foregroundColor: color.onPrimary,
+                                disabledBackgroundColor: Colors.grey[300],
+                                disabledForegroundColor: Colors.grey[600],
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                elevation: 3,
+                                elevation: isLoading ? 0 : 3,
                               ),
                               // Si está cargando, deshabilitamos el botón (onPressed: null)
                               onPressed: isLoading ? null : () {
