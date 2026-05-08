@@ -6,7 +6,7 @@ import '../../api/service/quedada_service.dart';
 import '../../api/model/usuario_model.dart';
 import '../../api/service/usuario_service.dart';
 import '../../providers/usuario_provider.dart';
-import '../../providers/quedada_provider.dart'; // <-- AÑADIDO: Importamos el buzón de datos
+import '../../providers/quedada_provider.dart';
 import '../../widgets/bottom_bar.dart';
 import 'package:intl/intl.dart';
 

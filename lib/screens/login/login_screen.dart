@@ -35,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  "assets/images/pawpark_logo.png",
+                  "assets/images/pawpark_draw.png",
                   height: 250,
                   fit: BoxFit.contain,
                 ),

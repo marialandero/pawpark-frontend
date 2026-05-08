@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pawpark_frontend/utils/image_helper.dart';
+import 'package:shimmer/shimmer.dart';
 
 class AvatarPerfil extends StatelessWidget {
   final String? urlImagen;
@@ -20,6 +21,14 @@ class AvatarPerfil extends StatelessWidget {
       backgroundColor: Colors.grey[200],
       child: ClipOval(
         child: Image.network(
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Shimmer.fromColors(
+              baseColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850]! : Colors.grey[300]!,
+              highlightColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[100]!,
+              child: CircleAvatar(radius: radio, backgroundColor: Colors.white),
+            );
+          },
           imagenFinal,
           width: radio * 2,
           height: radio * 2,

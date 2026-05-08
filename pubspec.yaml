@@ -46,6 +46,7 @@ dependencies:
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
   firebase_storage: ^13.3.0
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +78,7 @@ flutter:
     - assets/images/mapa_falso.png
     - assets/images/logo_pawpark2.png
     - assets/images/pawpark_logo.png
+    - assets/images/pawpark_draw.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

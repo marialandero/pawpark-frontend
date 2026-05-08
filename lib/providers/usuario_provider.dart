@@ -38,7 +38,9 @@ class UsuarioProvider with ChangeNotifier {
 
   Future<List<Usuario>> buscarUsuarios(String query) async {
     try {
-      return await UsuarioService.buscarUsuarios(query);
+      // Si no hay usuario logueado, mandamos un string vacío
+      String miUid = _usuario?.firebaseUid ?? "";
+      return await UsuarioService.buscarUsuarios(query, miUid);
     } catch (e) {
       debugPrint("Error buscando usuarios: $e");
       return [];

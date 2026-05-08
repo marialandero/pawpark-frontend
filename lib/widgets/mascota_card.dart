@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import '../api/model/mascota_model.dart';
 import '../utils/image_helper.dart';
 
@@ -27,6 +28,7 @@ class _MascotaCardState extends State<MascotaCard> {
     final pawBlue = Theme.of(context).colorScheme.primary;
     final parkRed = Theme.of(context).colorScheme.secondary;
     final color = Theme.of(context).colorScheme;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 10),
@@ -67,6 +69,18 @@ class _MascotaCardState extends State<MascotaCard> {
                             width: 95,
                             height: 95,
                             fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Shimmer.fromColors(
+                                  baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
+                                  highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+                                  child: Container(
+                                    width: 95,
+                                    height: 95,
+                                    color: Colors.white,
+                                  )
+                              );
+                            },
                             errorBuilder: (_, __, ___) {
                               return Image.network(
                                 ImageHelper.pet(null),

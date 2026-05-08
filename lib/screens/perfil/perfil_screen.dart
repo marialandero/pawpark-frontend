@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../api/model/usuario_model.dart';
 import '../../api/service/usuario_service.dart';
 import '../../providers/usuario_provider.dart';
@@ -106,9 +107,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
 
     return Scaffold(
+
       // Solo se muestra la barra inferior si es MI perfil
       bottomNavigationBar: esMiPerfil ? BottomBar(currentIndex: 3) : null,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
+
         // Si no es mi perfil, aparece automáticamente la flecha de volver
         automaticallyImplyLeading: !esMiPerfil,
         actions: [
@@ -121,6 +125,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         ],
       ),
       body: SafeArea(
+
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -232,6 +237,15 @@ class _PerfilScreenState extends State<PerfilScreen> {
                             child: Image.network(
                               ImageHelper.user(user.fotoPerfil),
                               fit: BoxFit.cover,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                                return Shimmer.fromColors(
+                                  baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
+                                  highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+                                  child: Container(color: Colors.white), // El Shimmer llena el círculo
+                                );
+                              },
                               errorBuilder: (_, __, ___) => Image.network(
                                 ImageHelper.user(null),
                                 fit: BoxFit.cover,

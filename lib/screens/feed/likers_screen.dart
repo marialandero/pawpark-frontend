@@ -6,6 +6,7 @@ import 'package:pawpark_frontend/widgets/avatar_perfil.dart';
 import '../../providers/post_provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../utils/image_helper.dart';
+
 class LikersScreen extends StatelessWidget {
   const LikersScreen({super.key});
 

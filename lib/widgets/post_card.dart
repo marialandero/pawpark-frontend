@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pawpark_frontend/api/service/usuario_service.dart';
 import 'package:pawpark_frontend/providers/post_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../api/model/post_model.dart';
 import 'avatar_perfil.dart';
 import '../utils/image_helper.dart';
@@ -66,7 +67,7 @@ class PostCard extends StatelessWidget {
                               TextSpan(
                                 text: " @${post.autorNickname}",
                                 style: TextStyle(
-                                  color: Colors.grey[600],
+                                  color: color.outline,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
                                 ),
@@ -97,6 +98,19 @@ class PostCard extends StatelessWidget {
               ImageHelper.pet(post.rutaImagen),
               width: double.infinity,
               fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child; // Imagen cargada
+                final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                return Shimmer.fromColors(
+                  baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
+                  highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+                  child: Container(
+                    color: Colors.white,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                );
+              },
               errorBuilder: (_, __, ___) => Container(
                 color: Colors.grey[300],
                 child: Icon(Icons.image_not_supported),
@@ -157,7 +171,7 @@ class PostCard extends StatelessWidget {
               post.descripcion,
               style: TextStyle(
                 fontSize: 15,
-                color: Colors.blueGrey[600],
+                color: color.outline,
                 height: 1.4,
               ),
             ),

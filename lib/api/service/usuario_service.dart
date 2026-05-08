@@ -21,6 +21,7 @@ class UsuarioService {
     }
   }
 
+
   static Future<Usuario?> actualizarPerfil(String uid, Map<String, dynamic> datos) async {
     final url = Uri.parse("$baseUrl/firebase/$uid");
 
@@ -30,7 +31,6 @@ class UsuarioService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(datos)
       );
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         return Usuario.fromJson(jsonDecode(response.body));
       }
@@ -39,6 +39,7 @@ class UsuarioService {
       return null;
     }
   }
+
 
   static Future<List<Usuario>> fetchTodos() async {
     final response = await http.get(Uri.parse("$baseUrl"));
@@ -51,57 +52,20 @@ class UsuarioService {
     }
   }
 
-  static Future<List<Usuario>> buscarUsuarios(String query) async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/buscar?query=$query"),
-    );
 
+  static Future<List<Usuario>> buscarUsuarios(String query, String miUid) async {
+
+    // Enviamos por parámetros la query y el UID del que busca
+    final url = Uri.parse("$baseUrl/buscar?query=$query&viewerUid=$miUid");
+    final response = await http.get(url);
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-
-      return data.map((e) => Usuario.fromJson(e)).toList();
+      List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Usuario.fromJson(json)).toList();
     } else {
       throw Exception("Error buscando usuarios");
     }
   }
 
-  static Future<String?> uploadFotoPerfil(String uid, File image) async {
-    final uri = Uri.parse("$baseUrl/upload-foto/$uid");
-
-    var request = http.MultipartRequest("POST", uri);
-
-    request.files.add(
-      await http.MultipartFile.fromPath("file", image.path),
-    );
-
-    final response = await request.send();
-
-    if (response.statusCode == 200) {
-      final resp = await response.stream.bytesToString();
-      return resp.replaceAll('"', '');
-    }
-
-    return null;
-  }
-
-  static Future<Mascota?> actualizarFotoMascota(
-      int id,
-      String foto,
-      ) async {
-    final response = await http.put(
-      Uri.parse("http://10.0.2.2:8081/mascotas/$id"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "fotoPerfilMascota": foto,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      return Mascota.fromJson(jsonDecode(response.body));
-    }
-
-    return null;
-  }
 
   static Future<bool> alternarSeguimiento(String miUid, String targetUid) async {
     final url = Uri.parse('$baseUrl/$miUid/seguir/$targetUid');
@@ -109,15 +73,16 @@ class UsuarioService {
     return response.statusCode == 200;
   }
 
+
   static Future<bool> alternarMascotaFavorita(String miUid, int mascotaId) async {
     final url = Uri.parse('$baseUrl/$miUid/favorito/$mascotaId');
     final response = await http.post(url);
     return response.statusCode == 200;
   }
 
+
   static Future<bool> registrarEnBackend(Map<String, dynamic> datosUsuario) async {
     final url = Uri.parse(baseUrl);
-    
     try{
       final response = await http.post(
         url,

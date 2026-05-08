@@ -2,13 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pawpark_frontend/api/service/storage_service.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../api/model/mascota_model.dart';
-import '../../api/service/mascota_service.dart';
 import '../../providers/usuario_provider.dart';
 import '../../utils/image_helper.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 
 class PerfilMascotaScreen extends StatefulWidget {
   const PerfilMascotaScreen({super.key});
@@ -218,6 +217,16 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                       Image.network(
                         ImageHelper.pet(mascotaActual.fotoPerfilMascota),
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+
+                          final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                          return Shimmer.fromColors(
+                            baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
+                            highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+                            child: Container(color: Colors.white),
+                          );
+                        },
                         errorBuilder: (_, __, ___) {
                           return Image.network(
                             ImageHelper.pet(null),
@@ -427,6 +436,16 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                                     child: Image.network(
                                       url,
                                       fit: BoxFit.cover,
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+
+                                        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                                        return Shimmer.fromColors(
+                                          baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
+                                          highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+                                          child: Container(color: Colors.white), // Skeleton cuadrado para la rejilla
+                                        );
+                                      },
                                       errorBuilder: (context, error, stackTrace) => Container(
                                         color: Colors.grey[200],
                                         child: Icon(Icons.pets, color: Colors.grey)

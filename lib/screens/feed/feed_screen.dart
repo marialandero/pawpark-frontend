@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-
 import '../../widgets/bottom_bar.dart';
 import '../../providers/post_provider.dart';
 import '../../providers/usuario_provider.dart';
@@ -38,6 +38,13 @@ class _FeedScreenState extends State<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent, // Hace que la barra de estado sea transparente
+          statusBarIconBrightness: Brightness.dark, // Iconos oscuros (para fondo claro)
+        ),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
