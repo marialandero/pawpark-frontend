@@ -265,7 +265,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
         title: Text("Cerrar sesión"),
         content: Text("¿Seguro que quieres salir?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCELAR")),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("CANCELAR")),
           TextButton(
             onPressed: () async {
               await FirebaseAuth.instance.signOut();

@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:pawpark_frontend/providers/post_provider.dart';
 import 'package:pawpark_frontend/providers/quedada_provider.dart';
 import 'package:pawpark_frontend/providers/usuario_provider.dart';
+import 'package:pawpark_frontend/providers/zona_provider.dart';
 import 'package:pawpark_frontend/screens/feed/crear_post_screen.dart';
 import 'package:pawpark_frontend/screens/feed/feed_screen.dart';
 import 'package:pawpark_frontend/screens/feed/likers_screen.dart';
@@ -43,7 +44,8 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
         ChangeNotifierProvider(create: (_) => QuedadaProvider()),
-        ChangeNotifierProvider(create: (_) => PostProvider())
+        ChangeNotifierProvider(create: (_) => PostProvider()),
+        ChangeNotifierProvider(create: (_) => ZonaProvider()),
       ],
       child: const MyApp(),
     ),
@@ -75,7 +77,7 @@ class MyApp extends StatelessWidget {
         "/form-mascota": (context) => FormMascotaScreen(),
         "/editar-perfil": (context) => FormEditarPerfilScreen(),
         "/perfil-mascota": (context) => PerfilMascotaScreen(),
-        "/map": (context) => MapasScreen(),
+        "/map": (context) => MapaScreen(),
         "/feed": (context) => FeedScreen(),
         "/quedadas": (context) => QuedadasScreen(),
         "/form-quedada": (context) => FormQuedadaScreen(),

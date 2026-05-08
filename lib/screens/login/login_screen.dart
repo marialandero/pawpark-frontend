@@ -146,7 +146,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               elevation: isLoading ? 0 : 3,
                             ),
-                            onPressed: () {
+                            onPressed: isLoading
+                              ? null
+                              : () {
                               if (_formKey.currentState!.validate()) {
                                 login();
                               }

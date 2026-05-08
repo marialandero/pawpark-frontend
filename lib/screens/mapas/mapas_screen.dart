@@ -1,102 +1,338 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import '../../api/model/usuario_model.dart';
+import '../../api/model/zona_model.dart';
 import '../../api/service/usuario_service.dart';
+import '../../api/service/mapa_service.dart';
 import '../../widgets/bottom_bar.dart';
+import '../../providers/zona_provider.dart';
 
-class MapasScreen extends StatefulWidget {
-  const MapasScreen({super.key});
+class MapaScreen extends StatefulWidget {
+  const MapaScreen({super.key});
 
   @override
-  State<MapasScreen> createState() => _MapasScreenState();
+  State<MapaScreen> createState() => _MapaScreenState();
 }
 
-class _MapasScreenState extends State<MapasScreen> {
+class _MapaScreenState extends State<MapaScreen> {
   late Future<Usuario> futureUsuario;
-  bool estoyEnParque = false;
+  final MapController _mapController = MapController();
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
+
+  LatLng centroActual = const LatLng(37.2014, -7.3218);
   List<String> perritosSeleccionados = [];
+  Zona? zonaSeleccionadaEnMapa;
 
   @override
   void initState() {
     super.initState();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    futureUsuario = UsuarioService.fetchPerfil(uid ?? "");
+    _cargarDatos();
   }
 
-  void _mostrarSeleccionPerritos(BuildContext context, Usuario user) {
-    if (estoyEnParque) {
-      setState(() {
-        estoyEnParque = false;
-        perritosSeleccionados.clear();
-      });
-      return;
-    }
+  void _cargarDatos() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    futureUsuario = UsuarioService.fetchPerfil(uid ?? "");
 
+    // Carga inicial con un pequeño delay para estabilidad del GPS
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      Position pos = await _determinarPosicion();
+      if (mounted) {
+        setState(() => centroActual = LatLng(pos.latitude, pos.longitude));
+        _mapController.move(centroActual, 16.0);
+
+        await Future.delayed(const Duration(milliseconds: 500));
+        context.read<ZonaProvider>().cargarZonas(pos.latitude, pos.longitude);
+      }
+    });
+  }
+
+  IconData _getIconoPorTipo(String tipo) {
+    switch (tipo) {
+      case 'parque': return Icons.park;
+      case 'plaza': return Icons.account_balance;
+      case 'playa': return Icons.beach_access;
+      default: return Icons.nature_people;
+    }
+  }
+
+  Future<Position> _determinarPosicion() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    return await Geolocator.getCurrentPosition();
+  }
+
+  // --- LÓGICA DE NAVEGACIÓN ENTRE ZONAS ---
+  void _gestionarAccionVoy(Zona zona, Usuario user, ZonaProvider provider) {
+    if (provider.idZonaDondeEstoy != null && provider.idZonaDondeEstoy != zona.osmId) {
+      // Si ya estoy en un sitio y pulso en OTRO diferente
+      _mostrarDialogoCambioZona(zona, user, provider);
+    } else if (provider.idZonaDondeEstoy == zona.osmId) {
+      // Si pulso en el sitio donde ya estoy
+      _confirmarSalida(user.firebaseUid, provider);
+    } else {
+      // Si no estoy en ningún sitio
+      _mostrarSeleccionPerritos(zona, user, provider);
+    }
+  }
+
+  void _mostrarDialogoCambioZona(Zona nuevaZona, Usuario user, ZonaProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("¿Cambiar de zona?"),
+        content: Text("Ya estás en un parque. Si confirmas ir a ${nuevaZona.nombre}, se restarán tus perritos de la zona anterior automáticamente."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCELAR")),
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _mostrarSeleccionPerritos(nuevaZona, user, provider);
+              },
+              child: const Text("SÍ, CAMBIAR")
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final zonaProvider = context.watch<ZonaProvider>();
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
+              ? Brightness.light : Brightness.dark,
+        ),
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: _cargarDatos,
+            icon: CircleAvatar(
+                backgroundColor: color.surface.withOpacity(0.8),
+                child: Icon(Icons.refresh, color: color.primary)
+            ),
+          ),
+          IconButton(
+            onPressed: () => showSignOutConfirmation(color),
+            icon: CircleAvatar(
+                backgroundColor: color.surface.withOpacity(0.8),
+                child: Icon(Icons.logout, color: color.primary)
+            ),
+          ),
+          const SizedBox(width: 10),
+        ],
+      ),
+      bottomNavigationBar: BottomBar(currentIndex: 0),
+      body: FutureBuilder<Usuario>(
+        future: futureUsuario,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          final user = snapshot.data!;
+
+          return Stack(
+            children: [
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: centroActual,
+                  initialZoom: 16.0,
+                  onTap: (_, __) => setState(() => zonaSeleccionadaEnMapa = null),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.pawpark.app',
+                    tileBuilder: Theme.of(context).brightness == Brightness.dark
+                        ? (context, tileWidget, tile) => ColorFiltered(
+                      colorFilter: const ColorFilter.matrix([
+                        -1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, 0, 0, 0, 1, 0,
+                      ]),
+                      child: tileWidget,
+                    ) : null,
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: centroActual,
+                        width: 40, height: 40,
+                        child: Icon(Icons.my_location, color: color.primary, size: 30),
+                      ),
+                      ...zonaProvider.zonas.map((zona) => Marker(
+                        point: LatLng(zona.latitud, zona.longitud),
+                        width: 45, height: 45,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => zonaSeleccionadaEnMapa = zona);
+                            _sheetController.animateTo(0.12, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                          },
+                          child: Icon(
+                            _getIconoPorTipo(zona.tipo),
+                            // AZUL si es mi zona activa, VERDE si hay otros perros, ROJO si está vacío
+                            color: zonaProvider.idZonaDondeEstoy == zona.osmId
+                                ? color.primary
+                                : (zona.perrosPresentes > 0 ? Colors.green : color.secondary),
+                            size: 35,
+                          ),
+                        ),
+                      )).toList(),
+                    ],
+                  ),
+                ],
+              ),
+
+              if (zonaSeleccionadaEnMapa != null)
+                Positioned(
+                  bottom: 110, left: 20, right: 20,
+                  child: _buildCardCheckInMapa(color, user, zonaProvider),
+                ),
+
+              _buildDraggableSheet(color, user, zonaProvider),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDraggableSheet(ColorScheme color, Usuario user, ZonaProvider provider) {
+    return DraggableScrollableSheet(
+      controller: _sheetController,
+      initialChildSize: 0.4,
+      minChildSize: 0.15,
+      maxChildSize: 0.65,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: color.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, spreadRadius: 2)],
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: color.onSurfaceVariant.withOpacity(0.4), borderRadius: BorderRadius.circular(10))),
+                const SizedBox(height: 12),
+                Text("Zonas cercanas", style: TextStyle(color: color.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+
+                provider.cargando
+                    ? const Padding(padding: EdgeInsets.only(top: 50), child: Center(child: CircularProgressIndicator()))
+                    : ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  itemCount: provider.zonas.length,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  separatorBuilder: (_, __) => Divider(color: color.outlineVariant),
+                  itemBuilder: (context, index) {
+                    final zona = provider.zonas[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        backgroundColor: color.secondary.withOpacity(0.1),
+                        child: Icon(_getIconoPorTipo(zona.tipo), color: color.secondary),
+                      ),
+                      title: Text(zona.nombre, style: TextStyle(color: color.onSurface, fontWeight: FontWeight.bold)),
+                      subtitle: Text("${zona.perrosPresentes} perritos ahora"),
+                      trailing: _buildBotonAccion(zona, user, provider),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBotonAccion(Zona zona, Usuario user, ZonaProvider provider) {
+    bool estoyAqui = provider.idZonaDondeEstoy == zona.osmId;
+    return ElevatedButton(
+      onPressed: () => _gestionarAccionVoy(zona, user, provider),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: estoyAqui ? Colors.red[700] : Colors.green,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Text(estoyAqui ? "YA ME VOY" : "¡VOY!"),
+    );
+  }
+
+  Widget _buildCardCheckInMapa(ColorScheme color, Usuario user, ZonaProvider provider) {
+    return Card(
+      color: color.surface,
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: ListTile(
+        leading: Icon(_getIconoPorTipo(zonaSeleccionadaEnMapa!.tipo), color: color.secondary),
+        title: Text(zonaSeleccionadaEnMapa!.nombre, style: TextStyle(color: color.onSurface, fontWeight: FontWeight.bold)),
+        subtitle: Text("${zonaSeleccionadaEnMapa!.perrosPresentes} perritos ahora"),
+        trailing: _buildBotonAccion(zonaSeleccionadaEnMapa!, user, provider),
+      ),
+    );
+  }
+
+  void _mostrarSeleccionPerritos(Zona zona, Usuario user, ZonaProvider provider) {
+    setState(() => perritosSeleccionados.clear());
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
       builder: (context) {
         return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
+          builder: (context, setModalState) {
             return Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    "¿Con quién estás en el parque?",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  Text("Check-in en ${zona.nombre}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15),
-                  user.mascotas.isEmpty
-                      ? const Text("No tienes mascotas registradas.")
-                      : Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: user.mascotas.length,
-                      itemBuilder: (context, index) {
-                        final mascota = user.mascotas[index];
-                        final estaSeleccionado = perritosSeleccionados.contains(mascota.nombre);
-
-                        return CheckboxListTile(
-                          title: Text(mascota.nombre),
-                          value: estaSeleccionado,
-                          secondary: CircleAvatar(
-                            backgroundImage: mascota.fotoPerfilMascota.startsWith('assets/')
-                                ? AssetImage(mascota.fotoPerfilMascota)
-                                : NetworkImage(mascota.fotoPerfilMascota) as ImageProvider,
-                          ),
-                          onChanged: (bool? valor) {
-                            setModalState(() {
-                              if (valor == true) {
-                                perritosSeleccionados.add(mascota.nombre);
-                              } else {
-                                perritosSeleccionados.remove(mascota.nombre);
-                              }
-                            });
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: perritosSeleccionados.isEmpty
-                        ? null
-                        : () {
-                      setState(() => estoyEnParque = true);
-                      Navigator.pop(context);
+                  if (user.mascotas.isEmpty) const Text("No tienes perritos registrados."),
+                  ...user.mascotas.map((mascota) => CheckboxListTile(
+                    title: Text(mascota.nombre),
+                    secondary: const Icon(Icons.pets),
+                    value: perritosSeleccionados.contains(mascota.id.toString()),
+                    onChanged: (bool? value) {
+                      setModalState(() {
+                        if (value!) perritosSeleccionados.add(mascota.id.toString());
+                        else perritosSeleccionados.remove(mascota.id.toString());
+                      });
                     },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 45),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
+                  )).toList(),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: perritosSeleccionados.isEmpty ? null : () async {
+                        provider.hacerCheckIn(user.firebaseUid, perritosSeleccionados, zona);
+                        Navigator.pop(context);
+                        setState(() => zonaSeleccionadaEnMapa = null);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("¡Check-in confirmado!")));
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.all(15)),
+                      child: const Text("CONFIRMAR Y ENTRAR"),
                     ),
-                    child: const Text("Confirmar"),
                   ),
+                  const SizedBox(height: 10),
                 ],
               ),
             );
@@ -106,161 +342,41 @@ class _MapasScreenState extends State<MapasScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final pawBlue = Theme.of(context).colorScheme.primary;
-    final parkRed = Theme.of(context).colorScheme.secondary;
-    final color = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      bottomNavigationBar: BottomBar(currentIndex: 0),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
+  void _confirmarSalida(String uid, ZonaProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("¿Te vas ya?"),
+        content: const Text("Se notificará que has dejado la zona."),
         actions: [
-          IconButton(
-              onPressed: () => showSignOutConfirmation(color),
-              icon: Icon(Icons.logout, color: color.primary)
-          )
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCELAR")),
+          TextButton(
+            onPressed: () async {
+              provider.notificarSalida(uid);
+              Navigator.pop(context);
+              setState(() => zonaSeleccionadaEnMapa = null);
+            },
+            child: const Text("SÍ, ME VOY", style: TextStyle(color: Colors.red)),
+          ),
         ],
-      ),
-      body: SafeArea(
-        child: FutureBuilder<Usuario>(
-          future: futureUsuario,
-          builder: (context, snapshot) {
-
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return Scaffold( // Usamos un Scaffold propio para que el error se vea bien
-                backgroundColor: color.onPrimary,
-                body: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(30),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error_outline, color: color.error, size: 60),
-                        SizedBox(height: 20),
-                        Text(
-                          "DETALLE DEL ERROR:",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          snapshot.error.toString(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: color.onErrorContainer, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }
-
-            if (!snapshot.hasData) {
-              return Center(child: Text("No hay datos"));
-            }
-
-            final user = snapshot.data!;
-
-            return Stack(
-              children: [
-                // Para el boceto uso un mapa falso como fondo
-                Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  color: Colors.blueGrey[50], // Color de fondo si no hay imagen
-                  child: Image.asset(
-                    'assets/images/mapa_falso.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.map_outlined, size: 80, color: Colors.grey[400]),
-                          Text("Cargando mapa interactivo...", style: TextStyle(color: Colors.grey[500])),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Buscador
-                SafeArea(
-                  child: Padding(
-                    padding:  EdgeInsets.all(15.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(30),
-                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-                          ),
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: "Buscar parques...",
-                              prefixIcon: Icon(Icons.search, color: pawBlue),
-                              suffixIcon: Icon(Icons.filter_list, color: Colors.grey),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(vertical: 15),
-                            ),
-                          ),
-                        ),
-                         SizedBox(height: 10),
-                        ElevatedButton.icon(
-                          onPressed: () => _mostrarSeleccionPerritos(context, user),
-                          icon: Icon(estoyEnParque ? Icons.waving_hand_outlined : Icons.waving_hand_outlined),
-                          label: Text(estoyEnParque
-                              ? "Ya me voy"
-                              : "Estoy en el parque"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: estoyEnParque ? color.tertiary : parkRed,
-                            foregroundColor: Colors.white,
-                            elevation: 5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
       ),
     );
   }
-
 
   void showSignOutConfirmation(ColorScheme color) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-        title: Text("Cerrar sesión"),
-        content: Text("¿Seguro que quieres salir?"),
+        title: const Text("Cerrar sesión"),
+        content: const Text("¿Seguro que quieres salir?"),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("CANCELAR", style: TextStyle(color: color.surfaceTint)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCELAR")),
           TextButton(
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
-              // volvemos al login
-              Navigator.pushNamed(context, "/login");
+              if (mounted) Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
             },
-            child: Text(
-              "CERRAR SESIÓN",
-              style: TextStyle(
-                color: color.onErrorContainer,
-              ),
-            ),
+            child: Text("SALIR", style: TextStyle(color: color.error)),
           ),
         ],
       ),

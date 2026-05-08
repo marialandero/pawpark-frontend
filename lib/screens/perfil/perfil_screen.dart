@@ -414,13 +414,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surfaceDim,
         title: Text("Cerrar sesión"),
         content: Text("¿Seguro que quieres salir?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("CANCELAR", style: TextStyle(color: color.surfaceTint)),
+            child: Text("CANCELAR", style: TextStyle(color: color.primary)),
           ),
           TextButton(
             onPressed: () async {
@@ -437,7 +436,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
             },
             child: Text(
               "CERRAR SESIÓN",
-              style: TextStyle(color: color.onErrorContainer),
+              style: TextStyle(color: color.error),
             ),
           ),
         ],
