@@ -15,19 +15,20 @@ class MapaService {
     final query = '''
     [out:json][timeout:25];
     (
-      node["leisure"~"park|dog_park"](around:3000, $lat, $lng);
-      way["leisure"~"park|dog_park"](around:3000, $lat, $lng);
-      node["place"~"square|plaza"](around:3000, $lat, $lng);
-      way["place"~"square|plaza"](around:3000, $lat, $lng);
-      node["natural"="beach"](around:3000, $lat, $lng);
-      way["natural"="beach"](around:3000, $lat, $lng); 
+      node["leisure"~"park|dog_park"](around:2000, $lat, $lng);
+      way["leisure"~"park|dog_park"](around:2000, $lat, $lng);
+      node["place"~"square|plaza"](around:2000, $lat, $lng);
+      way["place"~"square|plaza"](around:2000, $lat, $lng);
+      node["natural"="beach"](around:2000, $lat, $lng);
+      way["natural"="beach"](around:2000, $lat, $lng); 
     );
     out center;
     ''';
 
     try {
       final response = await http.post(
-        Uri.parse('https://overpass.kumi.systems/api/interpreter'),
+        // Otra opción: 'https://overpass.kumi.systems/api/interpreter
+        Uri.parse('https://overpass-api.de/api/interpreter'),
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           "User-Agent": "PawParkApp/1.0"
@@ -97,13 +98,16 @@ class MapaService {
     return []; // Si hay error, devolvemos lista vacía para que no explote la app
   }
 
-  // 2. SINCRONIZAR CON BACKEND
-  static Future<List<Zona>> sincronizarConBackend(List<Zona> zonas) async {
+  // SINCRONIZAR CON BACKEND
+  static Future<List<Zona>> sincronizarConBackend(List<Zona> zonas, String uid) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/sincronizar'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(zonas.map((z) => z.toJson()).toList()),
+        body: jsonEncode({
+          'uid': uid,
+          'zonas':zonas.map((z) => z.toJson()).toList(),
+        }),
       ).timeout(Duration(seconds: 5)); // No esperamos más de 5s a Java
 
       if (response.statusCode == 200) {
@@ -111,7 +115,7 @@ class MapaService {
         return data.map((z) => Zona.fromJson(z)).toList();
       }
     } catch (e) {
-      debugPrint("Backend Java no dispoble: $e");
+      debugPrint("Error de sincronización con Backend: $e");
     }
     // Si falla el servidor Java, devolvemos las zonas de OSM pero con 0 perritos
     return zonas;
@@ -125,12 +129,19 @@ class MapaService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'uid': uid,
-          'mascotasIds': mascotasIds,
+          // Aseguramos que los IDs viajen como números para que Java no sufra
+          'mascotasIds': mascotasIds.map((id) => int.parse(id)).toList(),
           'osmId': osmId,
         }),
-      );
-      return response.statusCode == 200;
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint("Respuesta Check-in: ${response.statusCode}");
+      debugPrint("Cuerpo Check-in: ${response.body}");
+
+      // Si el servidor devuelve 200 o 201, es un ÉXITO
+      return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
+      debugPrint("Error crítico en la petición: $e");
       return false;
     }
   }
