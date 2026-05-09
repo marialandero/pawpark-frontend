@@ -38,13 +38,8 @@ class _FeedScreenState extends State<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent, // Hace que la barra de estado sea transparente
-          statusBarIconBrightness: Brightness.dark, // Iconos oscuros (para fondo claro)
-        ),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(

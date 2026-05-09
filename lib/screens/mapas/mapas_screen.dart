@@ -117,7 +117,7 @@ class _MapaScreenState extends State<MapaScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text("¿Cambiar de zona?"),
-        content: Text("Ya estás en un parque. Si confirmas ir a ${nuevaZona.nombre}, se restarán tus perritos de la zona anterior automáticamente."),
+        content: Text("Ya estás en un parque. Si confirmas ir a ${nuevaZona.nombre}, se irán tus perritos de la zona anterior automáticamente."),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text("CANCELAR")),
           TextButton(
