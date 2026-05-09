@@ -33,9 +33,9 @@ class MapaService {
           "User-Agent": "PawParkApp/1.0"
         },
         body: {'data': query},
-      ).timeout(const Duration(seconds: 30)); // Añadimos timeout
+      ).timeout(Duration(seconds: 30)); // Añadimos timeout
 
-      debugPrint("Respuesta de Overpass recibida. Status: ${response.statusCode}"); // CHIVATO 2
+      debugPrint("Respuesta de Overpass recibida. Status: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         // Usamos utf8.decode para que los nombres con tildes se lean bien
@@ -43,7 +43,7 @@ class MapaService {
         List<Zona> zonasDetectadas = [];
 
         var elements = data['elements'] as List;
-        debugPrint("Elementos encontrados en el JSON: ${elements.length}"); // CHIVATO 3
+        debugPrint("Elementos encontrados en el JSON: ${elements.length}");
 
         // ... dentro del bucle for al procesar los elementos ...
         for (var element in elements) {
@@ -70,7 +70,7 @@ class MapaService {
             tipoFinal = 'recreativa';
           }
 
-          // 2. Lógica de nombres genéricos si no tienen nombre en el mapa
+          // Lógica de nombres genéricos si no tienen nombre en el mapa
           String nombreAMostrar = nombreDelMapa ?? (
               tipoFinal == 'playa' ? "Playa" :
               tipoFinal == 'parque' ? "Parque" :
@@ -97,14 +97,14 @@ class MapaService {
     return []; // Si hay error, devolvemos lista vacía para que no explote la app
   }
 
-  // 2. SINCRONIZAR CON TU BACKEND JAVA
+  // 2. SINCRONIZAR CON BACKEND
   static Future<List<Zona>> sincronizarConBackend(List<Zona> zonas) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/sincronizar'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(zonas.map((z) => z.toJson()).toList()),
-      ).timeout(const Duration(seconds: 5)); // No esperamos más de 5s a Java
+      ).timeout(Duration(seconds: 5)); // No esperamos más de 5s a Java
 
       if (response.statusCode == 200) {
         List data = jsonDecode(response.body);
@@ -117,7 +117,7 @@ class MapaService {
     return zonas;
   }
 
-  // 3. HACER CHECK-IN
+  // HACER CHECK-IN
   static Future<bool> hacerCheckIn(String uid, List<String> mascotasIds, String osmId) async {
     try {
       final response = await http.post(
@@ -135,7 +135,7 @@ class MapaService {
     }
   }
 
-  // 4. NOTIFICAR SALIDA MANUAL
+  // NOTIFICAR SALIDA MANUAL
   static Future<bool> notificarSalida(String uid) async {
     try {
       final response = await http.post(

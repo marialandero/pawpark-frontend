@@ -8,6 +8,9 @@ import 'package:pawpark_frontend/api/service/usuario_service.dart';
 import 'package:pawpark_frontend/providers/usuario_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../../api/service/ubicacion_service.dart';
+import '../../api/service/ubicacion_service.dart' as UbicacionService;
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -23,6 +26,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final nicknameController = TextEditingController();
   final locationController = TextEditingController();
   final nameController = TextEditingController();
+  double? latitudSeleccionada;
+  double? longitudSeleccionada;
   bool isLoading = false;
   String errorMessage = '';
 
@@ -98,7 +103,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 : null,
                           ),
                           SizedBox(height: 15),
-        
                           TextFormField(
                             controller: nicknameController,
                             decoration: InputDecoration(
@@ -116,23 +120,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 : null,
                           ),
                           SizedBox(height: 15),
-        
-                          TextFormField(
-                            controller: locationController,
-                            decoration: InputDecoration(
-                              labelText: "Localidad",
-                              prefixIcon: Icon(
-                                Icons.location_on_outlined,
-                                color: pawBlue,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            validator: (value) => value == null || value.isEmpty
-                                ? "Campo obligatorio"
-                                : null,
+                          // Desplegable para detectar la localidad
+                          Autocomplete<Map<String, dynamic>>(
+                            displayStringForOption: (option) => option['display_name']!,
+                            optionsBuilder: (TextEditingValue textEditingValue) async {
+                              print("Escribiendo: ${textEditingValue.text}"); // Si esto sale en consola, el widget está bien
+                              if (textEditingValue.text.length < 3) return const Iterable.empty();
+                              final resultados = await UbicacionService.buscarCiudad(textEditingValue.text);
+                              print("Resultados encontrados: ${resultados.length}"); // Si sale 0, es la API o el filtro
+                              return resultados;
+
+                            },
+                            onSelected: (Map<String, dynamic> selection) {
+                              setState(() {
+                                locationController.text = selection['display_name'];
+                                latitudSeleccionada = selection['lat'];
+                                longitudSeleccionada = selection['lon'];
+                              });
+                            },
+                            fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                              // Sincronizamos el controlador del Autocomplete con nuestro locationController
+                              if (locationController.text.isNotEmpty && controller.text.isEmpty) {
+                                controller.text = locationController.text;
+                              }
+                              return TextFormField(
+                                controller: controller,
+                                focusNode: focusNode,
+                                decoration: InputDecoration(
+                                  labelText: "Localidad",
+                                  prefixIcon: Icon(Icons.location_on_outlined, color: pawBlue),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) return "Campo obligatorio";
+                                  if (latitudSeleccionada == null) return "Debes seleccionar una opción de la lista";
+                                  return null;
+                                },
+                              );
+                            },
                           ),
+
                           SizedBox(height: 15),
         
                           TextFormField(
@@ -298,6 +325,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'nombre': nameController.text.trim(),
           'nickname': nicknameController.text.trim(),
           'localidad': locationController.text.trim(),
+          'latitudPref': latitudSeleccionada,
+          'longitudPref': longitudSeleccionada,
           'email': emailController.text.trim(),
           'fotoPerfil': null,
           'memberSince': DateTime.now().year.toString(),

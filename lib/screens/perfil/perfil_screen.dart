@@ -436,7 +436,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
             },
             child: Text(
               "CERRAR SESIÓN",
-              style: TextStyle(color: color.error),
+              style: TextStyle(color: color.secondary),
             ),
           ),
         ],

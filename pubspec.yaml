@@ -48,6 +48,8 @@ dependencies:
   firebase_storage: ^13.3.0
   shimmer: ^3.0.0
   geolocator: ^14.0.2
+  material_symbols_icons: ^4.2928.1
+  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   flutter_test:

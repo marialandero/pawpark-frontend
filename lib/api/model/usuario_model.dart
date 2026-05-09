@@ -7,6 +7,8 @@ class Usuario {
   final String nickname;
   final String descripcion;
   final String localidad;
+  final double? latitudPref;
+  final double? longitudPref;
   final String fotoPerfil;
   final String memberSince;
   final int encountersCount;
@@ -23,6 +25,8 @@ class Usuario {
     required this.nickname,
     required this.descripcion,
     required this.localidad,
+    this.latitudPref,
+    this.longitudPref,
     required this.fotoPerfil,
     required this.memberSince,
     required this.encountersCount,
@@ -40,6 +44,8 @@ class Usuario {
         email: json['email'] ?? '',
       nickname: json['nickname'] ?? '',
       localidad: json['localidad'] ?? '',
+      latitudPref: json['latitudPref'] != null ? (json['latitudPref'] as num).toDouble() : null,
+      longitudPref: json['longitudPref'] != null ? (json['longitudPref'] as num).toDouble() : null,
         descripcion: json['descripcion'] ?? '',
         fotoPerfil: json['fotoPerfil'] ?? '',
       memberSince: json['memberSince'] ?? '2026',
@@ -62,6 +68,8 @@ class Usuario {
       email: json['email']?.toString() ?? '',
       nickname: json['nickname']?.toString() ?? '',
       localidad: json['localidad']?.toString() ?? '',
+      latitudPref: json['latitudPref'] != null ? (json['latitudPref'] as num).toDouble() : null,
+      longitudPref: json['longitudPref'] != null ? (json['longitudPref'] as num).toDouble() : null,
       descripcion: json['descripcion']?.toString() ?? '',
       fotoPerfil: json['fotoPerfil']?.toString() ?? '',
       memberSince: json['memberSince']?.toString() ?? '',

@@ -20,36 +20,52 @@ class MapaScreen extends StatefulWidget {
 }
 
 class _MapaScreenState extends State<MapaScreen> {
-  late Future<Usuario> futureUsuario;
+  Usuario? usuarioLogueado;
   final MapController _mapController = MapController();
   final DraggableScrollableController _sheetController = DraggableScrollableController();
 
-  LatLng centroActual = const LatLng(37.2014, -7.3218);
+  // Ubicación predeterminada: Isla Cristina
+  LatLng centroActual = LatLng(37.2014, -7.3218);
   List<String> perritosSeleccionados = [];
   Zona? zonaSeleccionadaEnMapa;
 
   @override
   void initState() {
     super.initState();
+    // Lanzamos la carga de datos y GPS inmediatamente al entrar
     _cargarDatos();
   }
 
-  void _cargarDatos() {
+  Future<void> _cargarDatos() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    futureUsuario = UsuarioService.fetchPerfil(uid ?? "");
+    if (uid == null) return;
 
-    // Carga inicial con un pequeño delay para estabilidad del GPS
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      Position pos = await _determinarPosicion();
+    // LANZAMOS LAS DOS COSAS A LA VEZ (Sin el await delante)
+    final futurePerfil = UsuarioService.fetchPerfil(uid);
+    final futureGPS = _determinarPosicion();
+
+    try {
+      // Esperamos el perfil primero para poder dibujar la pantalla
+      final user = await futurePerfil;
+      if (mounted) setState(() => usuarioLogueado = user);
+
+      // En cuanto tenemos el perfil, lanzamos una carga de zonas "por defecto" (Isla Cristina)
+      // para que aparezcan pins YA, mientras el GPS sigue pensando.
+      context.read<ZonaProvider>().cargarZonas(centroActual.latitude, centroActual.longitude, user.firebaseUid);
+
+      // Ahora esperamos al GPS (que ya lleva un rato buscando en segundo plano)
+      Position pos = await futureGPS;
       if (mounted) {
-        setState(() => centroActual = LatLng(pos.latitude, pos.longitude));
-        _mapController.move(centroActual, 16.0);
-        await Future.delayed(const Duration(milliseconds: 500));
-        // 1. Obtenemos el UID del usuario logueado (necesario para el orden de prioridad social)
-        final String uidActual = FirebaseAuth.instance.currentUser?.uid ?? "";
-        context.read<ZonaProvider>().cargarZonas(pos.latitude, pos.longitude, uidActual);
+        LatLng ubicacionReal = LatLng(pos.latitude, pos.longitude);
+        setState(() => centroActual = ubicacionReal);
+        _mapController.move(ubicacionReal, 16.0);
+
+        // Actualizamos zonas a la posición real
+        context.read<ZonaProvider>().cargarZonas(pos.latitude, pos.longitude, user.firebaseUid);
       }
-    });
+    } catch (e) {
+      debugPrint("Error o GPS lento: $e");
+    }
   }
 
   IconData _getIconoPorTipo(String tipo) {
@@ -62,14 +78,27 @@ class _MapaScreenState extends State<MapaScreen> {
   }
 
   Future<Position> _determinarPosicion() async {
-    LocationPermission permission = await Geolocator.checkPermission();
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return Future.error('Servicio desactivado');
+
+    permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return Future.error('Permiso denegado');
     }
-    return await Geolocator.getCurrentPosition();
+
+    if (permission == LocationPermission.deniedForever) return Future.error('Permisos bloqueados');
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 5), // No esperamos más de 5 seg
+    );
   }
 
-  // --- LÓGICA DE NAVEGACIÓN ENTRE ZONAS ---
+  // LÓGICA DE NAVEGACIÓN ENTRE ZONAS
   void _gestionarAccionVoy(Zona zona, Usuario user, ZonaProvider provider) {
     if (provider.idZonaDondeEstoy != null && provider.idZonaDondeEstoy != zona.osmId) {
       // Si ya estoy en un sitio y pulso en OTRO diferente
@@ -87,16 +116,16 @@ class _MapaScreenState extends State<MapaScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("¿Cambiar de zona?"),
+        title: Text("¿Cambiar de zona?"),
         content: Text("Ya estás en un parque. Si confirmas ir a ${nuevaZona.nombre}, se restarán tus perritos de la zona anterior automáticamente."),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCELAR")),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("CANCELAR")),
           TextButton(
               onPressed: () {
                 Navigator.pop(context);
                 _mostrarSeleccionPerritos(nuevaZona, user, provider);
               },
-              child: const Text("SÍ, CAMBIAR")
+              child: Text("SÍ, CAMBIAR")
           ),
         ],
       ),
@@ -134,17 +163,13 @@ class _MapaScreenState extends State<MapaScreen> {
                 child: Icon(Icons.logout, color: color.primary)
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
         ],
       ),
       bottomNavigationBar: BottomBar(currentIndex: 0),
-      body: FutureBuilder<Usuario>(
-        future: futureUsuario,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          final user = snapshot.data!;
-
-          return Stack(
+      body: usuarioLogueado == null
+      ? Center(child: CircularProgressIndicator())
+      : Stack(
             children: [
               FlutterMap(
                 mapController: _mapController,
@@ -159,7 +184,7 @@ class _MapaScreenState extends State<MapaScreen> {
                     userAgentPackageName: 'com.pawpark.app',
                     tileBuilder: Theme.of(context).brightness == Brightness.dark
                         ? (context, tileWidget, tile) => ColorFiltered(
-                      colorFilter: const ColorFilter.matrix([
+                      colorFilter: ColorFilter.matrix([
                         -1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, 0, 0, 0, 1, 0,
                       ]),
                       child: tileWidget,
@@ -178,7 +203,7 @@ class _MapaScreenState extends State<MapaScreen> {
                         child: GestureDetector(
                           onTap: () {
                             setState(() => zonaSeleccionadaEnMapa = zona);
-                            _sheetController.animateTo(0.12, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                            _sheetController.animateTo(0.12, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
                           },
                           child: Icon(
                             _getIconoPorTipo(zona.tipo),
@@ -198,14 +223,12 @@ class _MapaScreenState extends State<MapaScreen> {
               if (zonaSeleccionadaEnMapa != null)
                 Positioned(
                   top: 100, left: 20, right: 20,
-                  child: _buildCardCheckInMapa(color, user, zonaProvider),
+                  child: _buildCardCheckInMapa(color, usuarioLogueado!, zonaProvider),
                 ),
 
-              _buildDraggableSheet(color, user, zonaProvider),
+              _buildDraggableSheet(color, usuarioLogueado!, zonaProvider),
             ],
-          );
-        },
-      ),
+          )
     );
   }
 
@@ -219,26 +242,26 @@ class _MapaScreenState extends State<MapaScreen> {
         return Container(
           decoration: BoxDecoration(
             color: color.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, spreadRadius: 2)],
           ),
           child: SingleChildScrollView(
             controller: scrollController,
             child: Column(
               children: [
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 Container(width: 40, height: 4, decoration: BoxDecoration(color: color.onSurfaceVariant.withOpacity(0.4), borderRadius: BorderRadius.circular(10))),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 Text("Zonas cercanas", style: TextStyle(color: color.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
 
                 provider.cargando
-                    ? const Padding(padding: EdgeInsets.only(top: 50), child: Center(child: CircularProgressIndicator()))
+                    ? Padding(padding: EdgeInsets.only(top: 50), child: Center(child: CircularProgressIndicator()))
                     : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   itemCount: provider.zonas.length,
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: NeverScrollableScrollPhysics(),
                   separatorBuilder: (_, __) => Divider(color: color.outlineVariant),
                   itemBuilder: (context, index) {
                     final zona = provider.zonas[index];
@@ -298,21 +321,21 @@ class _MapaScreenState extends State<MapaScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("Check-in en ${zona.nombre}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 15),
-                  if (user.mascotas.isEmpty) const Text("No tienes perritos registrados."),
+                  Text("Check-in en ${zona.nombre}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 15),
+                  if (user.mascotas.isEmpty) Text("No tienes perritos registrados."),
                   ...user.mascotas.map((mascota) => CheckboxListTile(
                     title: Text(mascota.nombre),
-                    secondary: const Icon(Icons.pets),
+                    secondary: Icon(Icons.pets),
                     value: perritosSeleccionados.contains(mascota.id.toString()),
                     onChanged: (bool? value) {
                       setModalState(() {
@@ -321,7 +344,7 @@ class _MapaScreenState extends State<MapaScreen> {
                       });
                     },
                   )).toList(),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -331,7 +354,7 @@ class _MapaScreenState extends State<MapaScreen> {
                         if (mounted) {
                           if (exito) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: const Text("¡Check-in confirmado! Disfrutad."), backgroundColor: color.tertiary)
+                                SnackBar(content: Text("¡Check-in confirmado! Disfrutad."), backgroundColor: color.tertiary)
                             );
                             setState(() => zonaSeleccionadaEnMapa = null);
                           } else {
@@ -383,13 +406,13 @@ class _MapaScreenState extends State<MapaScreen> {
         title: Text("Cerrar sesión"),
         content: Text("¿Seguro que quieres salir?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCELAR")),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("CANCELAR")),
           TextButton(
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               if (mounted) Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
             },
-            child: Text("SALIR", style: TextStyle(color: color.error)),
+            child: Text("SALIR", style: TextStyle(color: color.secondary)),
           ),
         ],
       ),

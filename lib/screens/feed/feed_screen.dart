@@ -168,7 +168,7 @@ class _FeedScreenState extends State<FeedScreen> {
             },
             child: Text(
               "CERRAR SESIÓN",
-              style: TextStyle(color: color.error),
+              style: TextStyle(color: color.secondary),
             ),
           ),
         ],

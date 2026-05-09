@@ -271,7 +271,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
               await FirebaseAuth.instance.signOut();
               if (mounted) Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
             },
-            child: Text("CERRAR SESIÓN", style: TextStyle(color: color.error)),
+            child: Text("CERRAR SESIÓN", style: TextStyle(color: color.secondary)),
           ),
         ],
       ),

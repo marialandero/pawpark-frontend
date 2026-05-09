@@ -9,7 +9,6 @@ class ZonaProvider with ChangeNotifier {
   int _cantidadPerritosActuales = 0;
   bool _cargando = false;
 
-  // Getters
   List<Zona> get zonas => _zonas;
   String? get idZonaDondeEstoy => _idZonaDondeEstoy;
   bool get cargando => _cargando;
@@ -19,16 +18,16 @@ class ZonaProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Traemos las zonas de OSM
+      // Traemos las zonas de OSM
       var osmZonas = await MapaService.buscarZonasEnOSM(lat, lng);
 
-      // 2. Sincronizamos con el Backend (MySQL)
+      // Sincronizamos con el Backend (MySQL)
       // El backend ahora debería devolver info de quién está en cada zona
       var zonasConDatos = await MapaService.sincronizarConBackend(osmZonas);
 
-      // 3. APLICAR PRIORIDADES DE ORDENACIÓN
+      // APLICAR PRIORIDADES DE ORDENACIÓN
       zonasConDatos.sort((a, b) {
-        // REGLA 1: Usuarios seguidos con mascotas favoritas (Suponiendo que el backend envía este flag)
+        // REGLA 1: Usuarios seguidos con mascotas favoritas
         if (a.tieneSeguidosFavoritos && !b.tieneSeguidosFavoritos) return -1;
         if (!a.tieneSeguidosFavoritos && b.tieneSeguidosFavoritos) return 1;
 
@@ -55,7 +54,7 @@ class ZonaProvider with ChangeNotifier {
     }
   }
 
-  // --- CONEXIÓN REAL CON BACKEND ---
+  // CONEXIÓN CON BACKEND
   Future<bool> hacerCheckIn(String uid, List<String> mascotasId, Zona zona) async {
     String? oldId = _idZonaDondeEstoy;
     int oldCantidad = _cantidadPerritosActuales;
