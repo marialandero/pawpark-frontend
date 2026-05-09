@@ -111,7 +111,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
                   height: 250,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: color.surface,
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: imagenSeleccionada == null
@@ -144,7 +144,6 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
                 decoration: InputDecoration(
                   hintText: "Escribe algo sobre el momento...",
                   filled: true,
-                  fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
                     borderSide: BorderSide.none,

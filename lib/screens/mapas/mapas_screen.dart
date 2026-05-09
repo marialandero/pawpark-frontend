@@ -330,7 +330,7 @@ class _MapaScreenState extends State<MapaScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("Check-in en ${zona.nombre}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text("Estoy en ${zona.nombre}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   SizedBox(height: 15),
                   if (user.mascotas.isEmpty) Text("No tienes perritos registrados."),
                   ...user.mascotas.map((mascota) => CheckboxListTile(
