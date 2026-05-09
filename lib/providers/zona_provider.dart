@@ -143,4 +143,12 @@ class ZonaProvider with ChangeNotifier {
       if (_zonas[index].perrosPresentes < 0) _zonas[index].perrosPresentes = 0;
     }
   }
+
+  Zona? obtenerZonaPorId(String osmId) {
+    try {
+      return _zonas.firstWhere((z) => z.osmId == osmId);
+    } catch (e) {
+      return null;
+    }
+  }
 }

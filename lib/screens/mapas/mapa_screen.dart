@@ -266,6 +266,13 @@ class _MapaScreenState extends State<MapaScreen> {
                   itemBuilder: (context, index) {
                     final zona = provider.zonas[index];
                     return ListTile(
+                      onTap: () {
+                        Navigator.pushNamed(
+                            context,
+                            "/detalle-zona",
+                          arguments: zona.osmId
+                        );
+                      },
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
                         backgroundColor: color.secondary.withOpacity(0.1),
