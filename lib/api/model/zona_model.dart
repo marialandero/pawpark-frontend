@@ -5,6 +5,8 @@ class Zona {
   final double longitud;
   final String tipo;
   int perrosPresentes; // Esto viene de ZonaStatsDTO
+  bool tieneSeguidos;
+  bool tieneSeguidosFavoritos;
 
   Zona({
     required this.osmId,
@@ -13,16 +15,10 @@ class Zona {
     required this.longitud,
     required this.tipo,
     this.perrosPresentes = 0,
+    this.tieneSeguidos = false,
+    this.tieneSeguidosFavoritos = false,
   });
 
-  // Para enviar al backend (ZonaRequest)
-  Map<String, dynamic> toJson() => {
-    'osmId': osmId,
-    'nombre': nombre,
-    'latitud': latitud,
-    'longitud': longitud,
-    'tipo': tipo,
-  };
 
   // Para recibir del backend (ZonaStatsDTO)
   factory Zona.fromJson(Map<String, dynamic> json) {
@@ -33,6 +29,21 @@ class Zona {
       longitud: json['longitud'],
       tipo: json['tipo'] ?? 'park',
       perrosPresentes: json['perrosPresentes'] ?? 0,
+      tieneSeguidos: json['tieneSeguidos'] ?? false,
+      tieneSeguidosFavoritos: json['tieneSeguidosFavoritos'] ?? false,
     );
   }
+
+
+  // Para enviar al backend (ZonaRequest)
+  Map<String, dynamic> toJson() => {
+    'osmId': osmId,
+    'nombre': nombre,
+    'latitud': latitud,
+    'longitud': longitud,
+    'tipo': tipo,
+    'perrosPresentes': perrosPresentes,
+    'tieneSeguidos': tieneSeguidos,
+    'tieneSeguidosFavoritos': tieneSeguidosFavoritos,
+  };
 }

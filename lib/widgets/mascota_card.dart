@@ -33,7 +33,7 @@ class _MascotaCardState extends State<MascotaCard> {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: color.onPrimary,
+        color: color.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4)),

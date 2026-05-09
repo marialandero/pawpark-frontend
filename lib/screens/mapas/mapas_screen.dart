@@ -44,9 +44,10 @@ class _MapaScreenState extends State<MapaScreen> {
       if (mounted) {
         setState(() => centroActual = LatLng(pos.latitude, pos.longitude));
         _mapController.move(centroActual, 16.0);
-
         await Future.delayed(const Duration(milliseconds: 500));
-        context.read<ZonaProvider>().cargarZonas(pos.latitude, pos.longitude);
+        // 1. Obtenemos el UID del usuario logueado (necesario para el orden de prioridad social)
+        final String uidActual = FirebaseAuth.instance.currentUser?.uid ?? "";
+        context.read<ZonaProvider>().cargarZonas(pos.latitude, pos.longitude, uidActual);
       }
     });
   }
@@ -196,7 +197,7 @@ class _MapaScreenState extends State<MapaScreen> {
 
               if (zonaSeleccionadaEnMapa != null)
                 Positioned(
-                  bottom: 110, left: 20, right: 20,
+                  top: 100, left: 20, right: 20,
                   child: _buildCardCheckInMapa(color, user, zonaProvider),
                 ),
 
@@ -290,6 +291,8 @@ class _MapaScreenState extends State<MapaScreen> {
   }
 
   void _mostrarSeleccionPerritos(Zona zona, Usuario user, ZonaProvider provider) {
+    final color =Theme.of(context).colorScheme;
+
     setState(() => perritosSeleccionados.clear());
     showModalBottomSheet(
       context: context,
@@ -323,16 +326,26 @@ class _MapaScreenState extends State<MapaScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: perritosSeleccionados.isEmpty ? null : () async {
-                        provider.hacerCheckIn(user.firebaseUid, perritosSeleccionados, zona);
                         Navigator.pop(context);
-                        setState(() => zonaSeleccionadaEnMapa = null);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("¡Check-in confirmado!")));
+                        bool exito = await provider.hacerCheckIn(user.firebaseUid, perritosSeleccionados, zona);
+                        if (mounted) {
+                          if (exito) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: const Text("¡Check-in confirmado! Disfrutad."), backgroundColor: color.tertiary)
+                            );
+                            setState(() => zonaSeleccionadaEnMapa = null);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Error al conectar con el servidor. Inténtalo de nuevo."), backgroundColor: color.error)
+                            );
+                          }
+                        }
                       },
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.all(15)),
-                      child: const Text("CONFIRMAR Y ENTRAR"),
+                      child: Text("CONFIRMAR Y ENTRAR"),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                 ],
               ),
             );
@@ -346,17 +359,17 @@ class _MapaScreenState extends State<MapaScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("¿Te vas ya?"),
-        content: const Text("Se notificará que has dejado la zona."),
+        title: Text("¿Te vas ya?"),
+        content: Text("Se notificará que has dejado la zona."),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCELAR")),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("CANCELAR")),
           TextButton(
             onPressed: () async {
               provider.notificarSalida(uid);
               Navigator.pop(context);
               setState(() => zonaSeleccionadaEnMapa = null);
             },
-            child: const Text("SÍ, ME VOY", style: TextStyle(color: Colors.red)),
+            child: Text("SÍ, ME VOY", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -367,8 +380,8 @@ class _MapaScreenState extends State<MapaScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Cerrar sesión"),
-        content: const Text("¿Seguro que quieres salir?"),
+        title: Text("Cerrar sesión"),
+        content: Text("¿Seguro que quieres salir?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCELAR")),
           TextButton(

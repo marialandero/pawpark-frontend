@@ -48,10 +48,15 @@ class MapaService {
         // ... dentro del bucle for al procesar los elementos ...
         for (var element in elements) {
           final tags = element['tags'] ?? {};
+          String? nombreDelMapa = tags['name'];
+          // Si no tiene nombre, saltamos al siguiente elemento del bucle
+          if (nombreDelMapa == null || nombreDelMapa.isEmpty) {
+            continue;
+          }
           String leisure = tags['leisure'] ?? '';
           String place = tags['place'] ?? '';
           String natural = tags['natural'] ?? '';
-          String? nombreDelMapa = tags['name'];
+
 
           // Lógica de clasificación de tipos: busca en etiquetas inglesas y decide si es parque o plaza
           String tipoFinal;
@@ -113,14 +118,14 @@ class MapaService {
   }
 
   // 3. HACER CHECK-IN
-  static Future<bool> hacerCheckIn(String uid, int mascotaId, String osmId) async {
+  static Future<bool> hacerCheckIn(String uid, List<String> mascotasIds, String osmId) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/checkin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'uid': uid,
-          'mascotaId': mascotaId,
+          'mascotasIds': mascotasIds,
           'osmId': osmId,
         }),
       );

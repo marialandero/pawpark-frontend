@@ -260,11 +260,12 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
                         ? FileImage(imagenSeleccionada!)
                         : null,
                     child: imagenSeleccionada == null
-                        ? Icon(Icons.add_a_photo, size: 30)
+                        ? Icon(Icons.add_a_photo, size: 30, color: pawBlue)
                         : null,
                   ),
                 ),
               ),
+              SizedBox(height: 10),
               Text(
                 "Cuéntanos sobre tu peludo",
                 style: TextStyle(

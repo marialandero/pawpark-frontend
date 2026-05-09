@@ -227,8 +227,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         padding: EdgeInsets.all(0),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: color.onPrimary,
-                          border: Border.all(color: color.onPrimary, width: 4),
+                          color: color.surfaceContainerLowest,
+                          border: Border.all(color: color.surfaceContainerLowest, width: 4),
                         ),
                         child: ClipOval(
                           child: SizedBox(
@@ -303,7 +303,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 margin: EdgeInsets.symmetric(horizontal: 20),
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.onPrimary,
+                  color: color.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
