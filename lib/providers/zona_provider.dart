@@ -25,6 +25,26 @@ class ZonaProvider with ChangeNotifier {
       // El backend ahora debería devolver info de quién está en cada zona
       var zonasConDatos = await MapaService.sincronizarConBackend(osmZonas, uidActual);
 
+      // PARA ELIMINAR PERRITOS FANTASMA
+      // Reseteamos el estado local antes de comprobar los datos del servidor
+      _idZonaDondeEstoy = null;
+      _cantidadPerritosActuales = 0;
+
+      for (var zona in zonasConDatos) {
+        // Buscamos si en la lista de usuarios de esta zona estoy YO (uidActual)
+        final miPresencia = zona.usuarios.cast<UsuarioPresente?>().firstWhere(
+                (u) => u?.uid == uidActual,
+            orElse: () => null
+        );
+
+        if (miPresencia != null) {
+          _idZonaDondeEstoy = zona.osmId;
+          _cantidadPerritosActuales = miPresencia.mascotas.length;
+          debugPrint("Reconciliación: Estás en ${zona.nombre} con ${_cantidadPerritosActuales} perros.");
+          break; // Dejamos de buscar porque ya encontramos tu ubicación
+        }
+      }
+
       // ORDEN DE PRIORIDADES
       zonasConDatos.sort((a, b) {
         // Usuarios seguidos con mascotas favoritas

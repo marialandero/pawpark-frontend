@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -23,17 +25,43 @@ class _MapaScreenState extends State<MapaScreen> {
   Usuario? usuarioLogueado;
   final MapController _mapController = MapController();
   final DraggableScrollableController _sheetController = DraggableScrollableController();
-
   // Ubicación predeterminada: Isla Cristina
   LatLng centroActual = LatLng(37.2014, -7.3218);
   List<String> perritosSeleccionados = [];
   Zona? zonaSeleccionadaEnMapa;
+  Timer? _timerRefresco; // Controlador de tiempo
 
   @override
   void initState() {
     super.initState();
-    // Lanzamos la carga de datos y GPS inmediatamente al entrar
-    _cargarDatos();
+    _cargarDatos(); // Lanzamos la carga de datos y GPS inmediatamente al entrar
+    // INICIAMOS EL AUTO-REFRESCO cada 30 segundos
+    _timerRefresco = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _refrescarZonasSilencioso();
+    });
+  }
+
+  @override
+  void dispose() {
+    // Importante ancelar el timer cuando salgas de la pantalla para que
+    // la app no vaya lenta ni gaste batería de más
+    _timerRefresco?.cancel();
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  // Método para refrescar solo las zonas sin mover la cámara ni mostrar loadings pesados
+  Future<void> _refrescarZonasSilencioso() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+
+    // Solo llamamos al provider para que sincronice con Java
+    // Usamos las coordenadas actuales donde esté el mapa o el usuario
+    context.read<ZonaProvider>().cargarZonas(
+        centroActual.latitude,
+        centroActual.longitude,
+        uid
+    );
   }
 
   Future<void> _cargarDatos() async {
