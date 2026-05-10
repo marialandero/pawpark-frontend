@@ -11,6 +11,7 @@ import 'package:pawpark_frontend/screens/feed/likers_screen.dart';
 import 'package:pawpark_frontend/screens/feed/search_screen.dart';
 import 'package:pawpark_frontend/screens/mapas/detalle_zona_screen.dart';
 import 'package:pawpark_frontend/screens/mapas/mapa_screen.dart';
+import 'package:pawpark_frontend/screens/perfil/ajustes_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/form_editar_perfil_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/form_mascota_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/perfil_mascota_screen.dart';
@@ -85,6 +86,7 @@ class MyApp extends StatelessWidget {
         "/search": (context) => SearchScreen(),
         "/likers": (context) => LikersScreen(),
         "/detalle-zona": (context) => DetalleZonaScreen(),
+        "/ajustes": (context) => AjustesScreen()
       },
     );
   }

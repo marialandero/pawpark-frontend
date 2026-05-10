@@ -139,7 +139,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               });
                             },
                             fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                              // Sincronizamos el controlador del Autocomplete con nuestro locationController
+                              // Sincronizamos el texto escrito con nuestro locationController principal
+                              // para que la función register() pueda leerlo después.
                               if (locationController.text.isNotEmpty && controller.text.isEmpty) {
                                 controller.text = locationController.text;
                               }
@@ -150,10 +151,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   labelText: "Localidad",
                                   prefixIcon: Icon(Icons.location_on_outlined, color: pawBlue),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  helperText: "Si no aparece en la lista, escríbela a mano",
                                 ),
+                                onChanged: (value) {
+                                  // Cada vez que el usuario escribe, actualizamos el controlador principal.
+                                  // Si escribe a mano, latitud y longitud seguirán siendo null,
+                                  // pero el String de la localidad se guardará correctamente.
+                                  locationController.text = value;
+
+                                  // Opcional: Si empieza a escribir de nuevo tras haber seleccionado algo,
+                                  // reseteamos las coordenadas para que no se guarden coordenadas de otra ciudad.
+                                  latitudSeleccionada = null;
+                                  longitudSeleccionada = null;
+                                },
                                 validator: (value) {
                                   if (value == null || value.isEmpty) return "Campo obligatorio";
-                                  if (latitudSeleccionada == null) return "Debes seleccionar una opción de la lista";
                                   return null;
                                 },
                               );
@@ -320,11 +332,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (userCredential.user != null) {
         await userCredential.user!.updateDisplayName(nicknameController.text.trim());
+        String localidadFinal = locationController.text.trim();
         final datosParaBackend = {
           'firebaseUid': userCredential.user!.uid,
           'nombre': nameController.text.trim(),
           'nickname': nicknameController.text.trim(),
-          'localidad': locationController.text.trim(),
+          'localidad': localidadFinal,
           'latitudPref': latitudSeleccionada,
           'longitudPref': longitudSeleccionada,
           'email': emailController.text.trim(),

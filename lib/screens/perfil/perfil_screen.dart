@@ -112,9 +112,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
       bottomNavigationBar: esMiPerfil ? BottomBar(currentIndex: 3) : null,
       appBar: AppBar(
         scrolledUnderElevation: 0,
-
         // Si no es mi perfil, aparece automáticamente la flecha de volver
         automaticallyImplyLeading: !esMiPerfil,
+        leading: esMiPerfil
+        ? IconButton(
+            onPressed: () => Navigator.pushNamed(context, "/ajustes"),
+            icon: Icon(Icons.menu, color: pawBlue)
+        )
+        : null,
         actions: [
           // Solo mostramos el logout si es mi propio perfil
           if (esMiPerfil)
@@ -169,7 +174,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       ),
                     )
                   else
-                    // BOTÓN DE SEGUIMIENTO PARA PERFIL AJENO
+                    // BOTÓN PARA SEGUIR A UN PERFIL AJENO
                     Positioned(
                       top: 40,
                       right: 20,

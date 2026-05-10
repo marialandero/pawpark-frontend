@@ -110,7 +110,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
 
                         SizedBox(height: 30),
 
-                        Text("Quedadas cerca de ti", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text("Planes alrededor", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                         SizedBox(height: 15),
 
                         if (explorar.isEmpty)

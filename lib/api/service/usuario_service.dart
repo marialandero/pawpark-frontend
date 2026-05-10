@@ -95,4 +95,31 @@ class UsuarioService {
       return false;
     }
   }
+
+
+  // Borrar una mascota específica por su ID
+  static Future<bool> eliminarMascota(int mascotaId) async {
+    // Apuntamos a la ruta /mascotas que es donde está MascotaController
+    final url = Uri.parse("http://10.0.2.2:8081/mascotas/$mascotaId");
+    try {
+      final response = await http.delete(url);
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint("Error al eliminar mascota: $e");
+      return false;
+    }
+  }
+
+  // Dar de baja la cuenta completa usando el Firebase UID
+  static Future<bool> darDeBajaCuenta(String uid) async {
+    // Usamos la ruta donde está UsuarioController
+    final url = Uri.parse("$baseUrl/firebase/$uid");
+    try {
+      final response = await http.delete(url);
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint("Error al dar de baja la cuenta: $e");
+      return false;
+    }
+  }
 }
