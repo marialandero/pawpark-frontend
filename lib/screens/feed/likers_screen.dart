@@ -46,11 +46,11 @@ class LikersScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.favorite_border, size: 60, color: Colors.grey[400]),
-                  const SizedBox(height: 10),
+                  Icon(Icons.favorite_border, size: 40, color: Colors.grey[400]),
+                  SizedBox(height: 10),
                   Text(
                     "No hay likes aún",
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -64,14 +64,14 @@ class LikersScreen extends StatelessWidget {
               final String userUid = licker['firebaseUid'];
 
               return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                 leading: AvatarPerfil(
                   urlImagen: ImageHelper.user(licker['fotoPerfil']),
                   radio: 22,
                 ),
                 title: Text(
                   licker['nombre'],
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text("@${licker['nickname']}"),
                 onTap: () async {

@@ -64,7 +64,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
       );
       if (success && mounted) {
         // Antes de cerrar la pantalla, obligamos al Provider a traer la lista nueva del Backend
-        await postProvider.cargarFeed(user.firebaseUid);
+        await postProvider.cargarTodoElFeed(user.firebaseUid);
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -104,7 +104,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
           child: Column(
             children: [
                   
-              /// 🖼️ IMAGEN
+              // IMAGEN
               GestureDetector(
                 onTap: pickImage,
                 child: Container(
@@ -133,9 +133,9 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
                 ),
               ),
                   
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
                   
-              /// 📝 DESCRIPCIÓN
+              // DESCRIPCIÓN
               TextField(
                 controller: descripcionController,
                 maxLines: 3,
@@ -151,7 +151,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
                 ),
               ),
                   
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
                   
               // Mascotas
               Align(
@@ -165,7 +165,7 @@ class _CrearPostScreenState extends State<CrearPostScreen> {
                 ),
               ),
                   
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
                   
               Wrap(
                 spacing: 8,

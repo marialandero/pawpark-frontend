@@ -77,4 +77,30 @@ class PostService {
       return false;
     }
   }
+
+
+  // FETCH SEGUIDOS
+  static Future<List<Post>> fetchPostsSeguidos(String usuarioUid) async {
+    final uri = Uri.parse("$baseUrl/seguidos/$usuarioUid"); // Tu nuevo endpoint
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(res.body);
+      return body.map((json) => Post.fromJson(json)).toList();
+    } else {
+      throw Exception("Error al cargar posts de seguidos");
+    }
+  }
+
+
+  // FETCH POR USUARIO (Para la pestaña "Míos")
+  static Future<List<Post>> fetchPostsByUsuario(String uid, String usuarioActualUid) async {
+    final uri = Uri.parse("$baseUrl/usuario/$uid/$usuarioActualUid");
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(res.body);
+      return body.map((json) => Post.fromJson(json)).toList();
+    } else {
+      throw Exception("Error al cargar posts del usuario");
+    }
+  }
 }
