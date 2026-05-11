@@ -208,6 +208,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                 await userProvider.alternarSeguimiento(user.firebaseUid);
                                 // Pedimos los datos frescos de este usuario específico
                                 await _refrescarDatos(false, user.firebaseUid);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("Ahora sigues a ${user.nickname}"))
+                                );
                               },
                               icon: Icon(Icons.person_add, size: 18),
                               label: Text("Seguir", style: TextStyle(fontSize: 16),),
@@ -239,23 +242,26 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           child: SizedBox(
                             width: 130,
                             height: 130,
-                            child: Image.network(
-                              ImageHelper.user(user.fotoPerfil),
-                              fit: BoxFit.cover,
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-                                return Shimmer.fromColors(
-                                  baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
-                                  highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
-                                  child: Container(color: Colors.white), // El Shimmer llena el círculo
+                            child: Builder(builder: (context) {
+                              final String ruta = ImageHelper.user(user.fotoPerfil);
+                              if (ImageHelper.isAsset(ruta)) {
+                                return Image.asset(ruta, fit: BoxFit.cover);
+                              } else {
+                                return Image.network(
+                                  ruta,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Shimmer.fromColors(
+                                      baseColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850]! : Colors.grey[300]!,
+                                      highlightColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[100]!,
+                                      child: Container(color: Colors.white),
+                                    );
+                                  },
+                                  errorBuilder: (_, __, ___) => Image.asset(ImageHelper.assetDefaultUser, fit: BoxFit.cover),
                                 );
-                              },
-                              errorBuilder: (_, __, ___) => Image.network(
-                                ImageHelper.user(null),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                              }
+                            }),
                           ),
                         ),
                       ),

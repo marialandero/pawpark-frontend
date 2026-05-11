@@ -60,7 +60,6 @@ class AsistentesScreen extends StatelessWidget {
                       subtitle: Text(
                         "con ${usuarioPresente.mascotas.join(', ')}",
                       ),
-                      trailing:  Icon(Icons.chevron_right, size: 20),
                       onTap: () async {
                         if (miUsuario?.firebaseUid == usuarioPresente.uid) {
                           // Es mi perfil: vamos a la ruta de perfil propio (uso Provider)

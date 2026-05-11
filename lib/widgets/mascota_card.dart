@@ -64,31 +64,28 @@ class _MascotaCardState extends State<MascotaCard> {
                         tag: 'foto_${widget.mascota.id}',
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(15),
-                          child: Image.network(
-                            ImageHelper.pet(widget.mascota.fotoPerfilMascota),
-                            width: 95,
-                            height: 95,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Shimmer.fromColors(
-                                  baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
-                                  highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
-                                  child: Container(
-                                    width: 95,
-                                    height: 95,
-                                    color: Colors.white,
-                                  )
-                              );
-                            },
-                            errorBuilder: (_, __, ___) {
+                          child: Builder(builder: (context) {
+                            final String ruta = ImageHelper.pet(widget.mascota.fotoPerfilMascota);
+                            if (ImageHelper.isAsset(ruta)) {
+                              return Image.asset(ruta, width: 95, height: 95, fit: BoxFit.cover);
+                            } else {
                               return Image.network(
-                                ImageHelper.pet(null),
+                                ruta,
                                 width: 95,
                                 height: 95,
+                                fit: BoxFit.cover,
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Shimmer.fromColors(
+                                      baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
+                                      highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+                                      child: Container(width: 95, height: 95, color: Colors.white)
+                                  );
+                                },
+                                errorBuilder: (_, __, ___) => Image.asset(ImageHelper.assetDefaultPet, width: 95, height: 95),
                               );
-                            },
-                          )
+                            }
+                          }),
                         ),
                       ),
 

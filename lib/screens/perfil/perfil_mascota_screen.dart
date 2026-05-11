@@ -214,26 +214,31 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                     fit: StackFit.expand,
                     children: [
                       /// IMAGEN MASCOTA
-                      Image.network(
-                        ImageHelper.pet(mascotaActual.fotoPerfilMascota),
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
+                      Builder(builder: (context) {
+                        final String ruta = ImageHelper.pet(mascotaActual.fotoPerfilMascota);
 
-                          final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-                          return Shimmer.fromColors(
-                            baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
-                            highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
-                            child: Container(color: Colors.white),
-                          );
-                        },
-                        errorBuilder: (_, __, ___) {
+                        if (ImageHelper.isAsset(ruta)) {
+                          return Image.asset(ruta, fit: BoxFit.cover);
+                        } else {
                           return Image.network(
-                            ImageHelper.pet(null),
+                            ruta,
                             fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                              return Shimmer.fromColors(
+                                baseColor: isDarkMode ? Colors.grey[850]! : Colors.grey[300]!,
+                                highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+                                child: Container(color: Colors.white),
+                              );
+                            },
+                            errorBuilder: (_, __, ___) => Image.asset(
+                              ImageHelper.assetDefaultPet,
+                              fit: BoxFit.cover,
+                            ),
                           );
-                        },
-                      ),
+                        }
+                      }),
 
                       /// overlay solo si es editable
                       if (esMiMascota)

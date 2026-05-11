@@ -144,9 +144,14 @@ class _FormEditarPerfilScreenState extends State<FormEditarPerfilScreen> {
                             radius: 60,
                               backgroundImage: _imagenSeleccionada != null
                                   ? FileImage(_imagenSeleccionada!)
-                                  : NetworkImage(
-                                  ImageHelper.user(fotoActual)
-                              ) as ImageProvider,
+                                  : (() {
+                                // Si no ha elegido foto nueva, procesamos la fotoActual con el Helper
+                                final String ruta = ImageHelper.user(fotoActual);
+
+                                return ImageHelper.isAsset(ruta)
+                                    ? AssetImage(ruta) as ImageProvider
+                                    : NetworkImage(ruta) as ImageProvider;
+                              })(),
                           ),
                           Container(
                             padding: EdgeInsets.all(8),

@@ -14,13 +14,22 @@ class AvatarPerfil extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imagenFinal = ImageHelper.user(urlImagen);
+    // Obtenemos la ruta (puede ser el asset local o la URL de Firebase)
+    final ruta = ImageHelper.user(urlImagen);
+    final bool esAsset = ImageHelper.isAsset(ruta);
 
     return CircleAvatar(
       radius: radio,
       backgroundColor: Colors.grey[200],
       child: ClipOval(
-        child: Image.network(
+        child: esAsset
+            ? Image.asset( // <--- Si es asset, usamos motor local
+          ruta,
+          width: radio * 2,
+          height: radio * 2,
+          fit: BoxFit.cover,
+        )
+              : Image.network(
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Shimmer.fromColors(
@@ -29,7 +38,7 @@ class AvatarPerfil extends StatelessWidget {
               child: CircleAvatar(radius: radio, backgroundColor: Colors.white),
             );
           },
-          imagenFinal,
+          ruta,
           width: radio * 2,
           height: radio * 2,
           fit: BoxFit.cover,
