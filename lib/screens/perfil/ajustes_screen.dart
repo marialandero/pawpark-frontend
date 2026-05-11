@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pawpark_frontend/api/service/mascota_service.dart';
 import 'package:provider/provider.dart';
 import '../../api/service/usuario_service.dart';
 import '../../providers/usuario_provider.dart';
@@ -50,7 +51,7 @@ class AjustesScreen extends StatelessWidget {
                       radio: 25,
                     ),
                     title: Text(mascota.nombre),
-                    subtitle: Text(mascota.raza),
+                    subtitle: Text(MascotaService.formatearRaza(mascota.raza).toUpperCase()),
                     trailing: IconButton(
                       icon: Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () =>
@@ -106,7 +107,7 @@ class AjustesScreen extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(context); // Cerramos el diálogo primero
               // Llamamos al servicio
-              bool exito = await UsuarioService.eliminarMascota(mascota.id);
+              bool exito = await MascotaService.eliminarMascota(mascota.id);
               if (exito) {
                 // Refrescamos y avisamos
                 await provider.recargarUsuario();

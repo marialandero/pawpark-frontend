@@ -48,6 +48,7 @@ class _SearchScreenState extends State<SearchScreen> {
           "¿A quién buscas?",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        centerTitle: true,
       ),
 
       body: Padding(

@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 Future<List<Map<String, dynamic>>> buscarCiudad(String query) async {
   if (query.length < 3) return [];
-
+  // Usamos Nominatim que es una API gratuita de OpenStreetMap para buscar ciudades en el mundo
   final url = Uri.parse(
     "https://nominatim.openstreetmap.org/search?q=$query&format=json&limit=5&addressdetails=1&featuretype=settlement",
   );

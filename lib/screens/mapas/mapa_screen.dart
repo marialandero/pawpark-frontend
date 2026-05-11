@@ -297,7 +297,7 @@ class _MapaScreenState extends State<MapaScreen> {
                       onTap: () {
                         Navigator.pushNamed(
                             context,
-                            "/detalle-zona",
+                            "/asistentes",
                           arguments: zona.osmId
                         );
                       },
@@ -307,7 +307,7 @@ class _MapaScreenState extends State<MapaScreen> {
                         child: Icon(_getIconoPorTipo(zona.tipo), color: color.secondary),
                       ),
                       title: Text(zona.nombre, style: TextStyle(color: color.onSurface, fontWeight: FontWeight.bold)),
-                      subtitle: Text("${zona.perrosPresentes} perritos ahora"),
+                      subtitle: Text("${zona.perrosPresentes} ${zona.perrosPresentes == 1 ? 'perrito ahora' : 'perritos ahora'}"),
                       trailing: _buildBotonAccion(zona, user, provider),
                     );
                   },

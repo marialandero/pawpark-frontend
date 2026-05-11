@@ -185,7 +185,7 @@ class _QuedadasScreenState extends State<QuedadasScreen> {
           Text(dia.toUpperCase(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
           Text(hora, style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
           Spacer(),
-          Text("$totalPerros perros", style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+          Text("$totalPerros ${totalPerros == 1 ? 'perro' : 'perros'}", style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
           Text(q.lugarNombre, style: TextStyle(color: Colors.white, fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
         ],
       ),

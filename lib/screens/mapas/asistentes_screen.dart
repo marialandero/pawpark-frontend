@@ -5,8 +5,8 @@ import '../../providers/usuario_provider.dart';
 import '../../api/service/usuario_service.dart';
 import '../../widgets/avatar_perfil.dart';
 
-class DetalleZonaScreen extends StatelessWidget {
-  const DetalleZonaScreen({super.key});
+class AsistentesScreen extends StatelessWidget {
+  const AsistentesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +97,7 @@ class DetalleZonaScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(zona, ColorScheme color) {
+
     return Container(
       padding: EdgeInsets.all(20),
       color: color.primaryContainer.withOpacity(0.1),
@@ -116,8 +117,8 @@ class DetalleZonaScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  "${zona.perrosPresentes} perritos presentes ahora",
-                  style: TextStyle(color: color.tertiary),
+                  "${zona.perrosPresentes} ${zona.perrosPresentes == 1 ? 'perrito presente ahora' : 'perritos presentes ahora'}",
+                  style: TextStyle(color: zona.perrosPresentes > 0 ? color.tertiary : color.outline),
                 ),
               ],
             ),

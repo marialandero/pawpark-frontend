@@ -2,13 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:pawpark_frontend/api/model/post_model.dart';
+import 'package:pawpark_frontend/core/api_config.dart';
 
 class PostService {
 
-  static const String baseUrl = "http://10.0.2.2:8081/posts";
+  static const String baseUrlPosts = "${ApiConfig.baseUrl}/posts";
 
   static Future<bool> crearPost(Map<String, dynamic> body) async {
-    final uri = Uri.parse(baseUrl);
+    final uri = Uri.parse(baseUrlPosts);
     final res = await http.post(
       uri,
       headers: {"Content-Type": "application/json"},
@@ -19,7 +20,7 @@ class PostService {
 
 
   static Future<List<Post>> fetchFeed(String usuarioUid) async {
-    final uri = Uri.parse("$baseUrl/feed/$usuarioUid");
+    final uri = Uri.parse("$baseUrlPosts/feed/$usuarioUid");
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       final List<dynamic> body = jsonDecode(res.body);
@@ -32,7 +33,7 @@ class PostService {
 
 
   static Future<List<Post>> fetchPostsByMascota(int mascotaId, String usuarioUid) async {
-    final uri = Uri.parse("$baseUrl/mascota/$mascotaId/$usuarioUid");
+    final uri = Uri.parse("$baseUrlPosts/mascota/$mascotaId/$usuarioUid");
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       final List data = jsonDecode(res.body);
@@ -48,7 +49,7 @@ class PostService {
     try {
       // Esta URL debe coincidir con @PostMapping("/{postId}/like/{usuarioUid}") en Java
       final response = await http.post(
-        Uri.parse('$baseUrl/$postId/like/$usuarioUid'),
+        Uri.parse('$baseUrlPosts/$postId/like/$usuarioUid'),
       );
       return response.statusCode == 200;
     } catch (e) {
@@ -58,7 +59,7 @@ class PostService {
 
 
   static Future<List<dynamic>> fetchLikers(int postId) async {
-    final uri = Uri.parse("$baseUrl/$postId/likers");
+    final uri = Uri.parse("$baseUrlPosts/$postId/likers");
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       return jsonDecode(res.body); // Devolvemos la lista de mapas (JSON)
@@ -71,7 +72,7 @@ class PostService {
   // ELIMINAR POST
   static Future<bool> eliminarPost(int postId) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/$postId'));
+      final response = await http.delete(Uri.parse('$baseUrlPosts/$postId'));
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
       return false;
@@ -81,7 +82,7 @@ class PostService {
 
   // FETCH SEGUIDOS
   static Future<List<Post>> fetchPostsSeguidos(String usuarioUid) async {
-    final uri = Uri.parse("$baseUrl/seguidos/$usuarioUid"); // Tu nuevo endpoint
+    final uri = Uri.parse("$baseUrlPosts/seguidos/$usuarioUid"); // Tu nuevo endpoint
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       final List<dynamic> body = jsonDecode(res.body);
@@ -94,7 +95,7 @@ class PostService {
 
   // FETCH POR USUARIO (Para la pestaña "Míos")
   static Future<List<Post>> fetchPostsByUsuario(String uid, String usuarioActualUid) async {
-    final uri = Uri.parse("$baseUrl/usuario/$uid/$usuarioActualUid");
+    final uri = Uri.parse("$baseUrlPosts/usuario/$uid/$usuarioActualUid");
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       final List<dynamic> body = jsonDecode(res.body);

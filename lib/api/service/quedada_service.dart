@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:pawpark_frontend/core/api_config.dart';
 import '../model/quedada_model.dart';
 
 class QuedadaService {
-  static const String baseUrl = 'http://10.0.2.2:8081/quedadas';
+  static const String baseUrlQuedadas = '${ApiConfig.baseUrl}/quedadas';
 
   // Obtener todas las quedadas
   static Future<List<Quedada>> fetchTodas() async {
-    final response = await http.get(Uri.parse(baseUrl));
+    final response = await http.get(Uri.parse(baseUrlQuedadas));
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
       return jsonResponse.map((data) => Quedada.fromJson(data)).toList();
@@ -19,7 +20,7 @@ class QuedadaService {
   // Crear una quedada
   static Future<Quedada?> crearQuedada(Map<String, dynamic> payload) async {
     final response = await http.post(
-      Uri.parse(baseUrl),
+      Uri.parse(baseUrlQuedadas),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );
@@ -32,7 +33,7 @@ class QuedadaService {
   // Unirse a una quedada
   static Future<Quedada?> unirse(int quedadaId, Map<String, dynamic> payload) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/$quedadaId/unirse'),
+      Uri.parse('$baseUrlQuedadas/$quedadaId/unirse'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload), // Enviamos el mapa que viene del Provider
     );
@@ -45,7 +46,7 @@ class QuedadaService {
   // Desapuntarse de una quedada
   static Future<Quedada?> desapuntarse(int quedadaId, Map<String, dynamic> payload) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/$quedadaId/desapuntarse'),
+      Uri.parse('$baseUrlQuedadas/$quedadaId/desapuntarse'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );

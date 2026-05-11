@@ -5,7 +5,7 @@ import '../model/zona_model.dart';
 
 class MapaService {
   // Usamos 10.0.2.2 para que el emulador Android vea el servidor Java de nuestro PC
-  static const String baseUrl = "http://10.0.2.2:8081/mapa";
+  static const String baseUrl = "https://pawpark-backend-production.up.railway.app/mapa";
 
   static Future<List<Zona>> buscarZonasEnOSM(double lat, double lng) async {
 
