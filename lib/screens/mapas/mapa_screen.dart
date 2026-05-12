@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -10,9 +9,10 @@ import 'package:provider/provider.dart';
 import '../../api/model/usuario_model.dart';
 import '../../api/model/zona_model.dart';
 import '../../api/service/usuario_service.dart';
-import '../../api/service/mapa_service.dart';
 import '../../widgets/bottom_bar.dart';
 import '../../providers/zona_provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class MapaScreen extends StatefulWidget {
   const MapaScreen({super.key});
@@ -98,10 +98,10 @@ class _MapaScreenState extends State<MapaScreen> {
 
   IconData _getIconoPorTipo(String tipo) {
     switch (tipo) {
-      case 'parque': return Icons.park;
-      case 'plaza': return Icons.account_balance;
-      case 'playa': return Icons.beach_access;
-      default: return Icons.nature_people;
+      case 'parque': return Symbols.nature;
+      case 'plaza': return Symbols.deck;
+      case 'playa': return Symbols.beach_access;
+      default: return Symbols.sound_detection_dog_barking;
     }
   }
 
@@ -235,6 +235,8 @@ class _MapaScreenState extends State<MapaScreen> {
                           },
                           child: Icon(
                             _getIconoPorTipo(zona.tipo),
+                            fill: 1,
+                            weight: 700,
                             // AZUL si es mi zona activa, VERDE si hay otros perros, ROJO si está vacío
                             color: zonaProvider.idZonaDondeEstoy == zona.osmId
                                 ? color.primary
@@ -304,7 +306,13 @@ class _MapaScreenState extends State<MapaScreen> {
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
                         backgroundColor: color.secondary.withOpacity(0.1),
-                        child: Icon(_getIconoPorTipo(zona.tipo), color: color.secondary),
+                        child: Icon(
+                          _getIconoPorTipo(zona.tipo),
+                          color: color.secondary,
+                          fill: 1,
+                          weight: 600,
+                          size: 22,
+                        ),
                       ),
                       title: Text(zona.nombre, style: TextStyle(color: color.onSurface, fontWeight: FontWeight.bold)),
                       subtitle: Text("${zona.perrosPresentes} ${zona.perrosPresentes == 1 ? 'perrito ahora' : 'perritos ahora'}"),
@@ -340,7 +348,13 @@ class _MapaScreenState extends State<MapaScreen> {
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
-        leading: Icon(_getIconoPorTipo(zonaSeleccionadaEnMapa!.tipo), color: color.secondary),
+        leading: Icon(
+          _getIconoPorTipo(zonaSeleccionadaEnMapa!.tipo),
+          color: color.secondary,
+          fill: 1,
+          weight: 600,
+          size: 28,
+        ),
         title: Text(zonaSeleccionadaEnMapa!.nombre, style: TextStyle(color: color.onSurface, fontWeight: FontWeight.bold)),
         subtitle: Text("${zonaSeleccionadaEnMapa!.perrosPresentes} perritos ahora"),
         trailing: _buildBotonAccion(zonaSeleccionadaEnMapa!, user, provider),
