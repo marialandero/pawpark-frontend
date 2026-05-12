@@ -34,9 +34,10 @@ class AjustesScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
-
+            user.mascotas.isEmpty
+            ? _buildNoMascotasWidget(context)
             // Lista de mascotas con opción de borrar
-            ListView.builder(
+            : ListView.builder(
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               itemCount: user.mascotas.length,
@@ -44,10 +45,8 @@ class AjustesScreen extends StatelessWidget {
                 final mascota = user.mascotas[index];
                 return Card(
                   child: ListTile(
-                    // En lugar de CircleAvatar con backgroundImage, usamos tu widget
                     leading: AvatarPerfil(
                       urlImagen: mascota.fotoPerfilMascota,
-                      // O mascota.foto, según tu modelo
                       radio: 25,
                     ),
                     title: Text(mascota.nombre),
@@ -94,7 +93,6 @@ class AjustesScreen extends StatelessWidget {
     );
   }
 
-  // LÓGICA DE DIÁLOGOS Y ACCIONES
   void _confirmarBorradoMascota(BuildContext context, dynamic mascota, UsuarioProvider provider) {
     showDialog(
       context: context,
@@ -132,6 +130,28 @@ class AjustesScreen extends StatelessWidget {
               }
             },
             child: Text("ELIMINAR", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget para mostrar cuando la lista está vacía
+  Widget _buildNoMascotasWidget(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.pets, color: Colors.grey[400], size: 40),
+          const SizedBox(height: 10),
+          Text(
+            "No tienes ninguna mascota registrada.",
+            style: TextStyle(color: Colors.grey[600]),
           ),
         ],
       ),

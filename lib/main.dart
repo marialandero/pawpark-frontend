@@ -16,6 +16,7 @@ import 'package:pawpark_frontend/screens/perfil/form_editar_perfil_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/form_mascota_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/perfil_mascota_screen.dart';
 import 'package:pawpark_frontend/screens/perfil/perfil_screen.dart';
+import 'package:pawpark_frontend/screens/perfil/seguidores_screen.dart';
 import 'package:pawpark_frontend/screens/quedadas/detalle_quedada_screen.dart';
 import 'package:pawpark_frontend/screens/quedadas/form_quedada_screen.dart';
 import 'package:pawpark_frontend/screens/quedadas/quedadas_screen.dart';
@@ -86,7 +87,8 @@ class MyApp extends StatelessWidget {
         "/search": (context) => SearchScreen(),
         "/likers": (context) => LikersScreen(),
         "/asistentes": (context) => AsistentesScreen(),
-        "/ajustes": (context) => AjustesScreen()
+        "/ajustes": (context) => AjustesScreen(),
+        "/seguidores": (context) => SeguidoresScreen()
       },
     );
   }

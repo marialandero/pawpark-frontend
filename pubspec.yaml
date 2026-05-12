@@ -50,6 +50,9 @@ dependencies:
   geolocator: ^14.0.2
   material_symbols_icons: ^4.2928.1
   font_awesome_flutter: ^11.0.0
+  flutter_image_compress: ^2.4.0
+  path_provider: ^2.1.5
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

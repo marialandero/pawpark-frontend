@@ -180,10 +180,11 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
       // Subir imagen primero si el usuario seleccionó una
       if (imagenSeleccionada != null) {
         urlFotoFirebase = await StorageService.subirImageAFirebase(
-            imagen: XFile(imagenSeleccionada!.path),
-            carpeta: 'mascotas'
+          imagen: XFile(imagenSeleccionada!.path),
+          carpeta: 'mascotas',
         );
-        if (urlFotoFirebase == null) throw Exception("Error al subir a Firebase");
+        if (urlFotoFirebase == null)
+          throw Exception("Error al subir a Firebase");
       }
 
       // Preparar el mapa de datos
@@ -346,7 +347,15 @@ class _FormMascotaScreenState extends State<FormMascotaScreen> {
                   ),
                 ),
                 keyboardType: TextInputType.number,
-                validator: (v) => v!.isEmpty ? "Campo obligatorio" : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Por favor, introduce la edad";
+                  }
+                  if (int.parse(value) < 0 || int.parse(value) > 30) {
+                    return "Introduce una edad realista";
+                  }
+                  return null;
+                },
               ),
               SizedBox(height: 25),
 

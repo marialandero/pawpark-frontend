@@ -197,7 +197,7 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
-          // physics: BouncingScrollPhysics(),
+          physics: BouncingScrollPhysics(),
           slivers: [
             // Cabecera con la foto
             SliverAppBar(

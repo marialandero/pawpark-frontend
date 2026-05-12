@@ -82,6 +82,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       );
     }
 
+
     if (user == null) {
       return Scaffold(
         backgroundColor: color.onPrimary,
@@ -129,276 +130,284 @@ class _PerfilScreenState extends State<PerfilScreen> {
             ),
         ],
       ),
-      body: SafeArea(
-
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Header y avatar
-              Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    height: 180,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          pawBlue.withOpacity(0.9),
-                          parkRed.withOpacity(0.9),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(30),
-                      ),
-                    ),
-                  ),
-
-                  if (esMiPerfil)
-                    Positioned(
-                      top: 40,
-                      right: 20,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          // Añadimos el refresco al volver de editar
-                          Navigator.pushNamed(context, "/editar-perfil")
-                              .then((_) => _refrescarDatos(true, user.firebaseUid));
-                        },
-                        icon: Icon(Icons.edit, size: 16),
-                        label: Text("Editar perfil"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          foregroundColor: color.onPrimary,
-                          elevation: 0,
+      body: RefreshIndicator(
+        onRefresh: () => _refrescarDatos(esMiPerfil, user!.firebaseUid),
+        color: pawBlue,
+        backgroundColor: color.onPrimary,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                // Header y avatar
+                Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      height: 180,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            pawBlue.withOpacity(0.9),
+                            parkRed.withOpacity(0.9),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(30),
                         ),
                       ),
-                    )
-                  else
-                    // BOTÓN PARA SEGUIR A UN PERFIL AJENO
-                    Positioned(
-                      top: 40,
-                      right: 20,
-                      child: loSigo
-                          ? TextButton.icon(
-                              onPressed: () async {
-                                await userProvider.alternarSeguimiento(user.firebaseUid);
-                                // Refresco unificado
-                                await _refrescarDatos(false, user.firebaseUid);
-                              },
-                              icon: Icon(
-                                Icons.check,
-                                color: color.onPrimary,
-                                size: 20,
-                              ),
-                              label: Text(
-                                "Siguiendo",
-                                style: TextStyle(
+                    ),
+        
+                    if (esMiPerfil)
+                      Positioned(
+                        top: 40,
+                        right: 20,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            // Añadimos el refresco al volver de editar
+                            Navigator.pushNamed(context, "/editar-perfil")
+                                .then((_) => _refrescarDatos(true, user.firebaseUid));
+                          },
+                          icon: Icon(Icons.edit, size: 16),
+                          label: Text("Editar perfil"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            foregroundColor: color.onPrimary,
+                            elevation: 0,
+                          ),
+                        ),
+                      )
+                    else
+                      // BOTÓN PARA SEGUIR A UN PERFIL AJENO
+                      Positioned(
+                        top: 40,
+                        right: 20,
+                        child: loSigo
+                            ? TextButton.icon(
+                                onPressed: () async {
+                                  await userProvider.alternarSeguimiento(user.firebaseUid);
+                                  // Refresco unificado
+                                  await _refrescarDatos(false, user.firebaseUid);
+                                },
+                                icon: Icon(
+                                  Icons.check,
                                   color: color.onPrimary,
-                                  fontSize: 16,
+                                  size: 20,
+                                ),
+                                label: Text(
+                                  "Siguiendo",
+                                  style: TextStyle(
+                                    color: color.onPrimary,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              )
+                            : ElevatedButton.icon(
+                                onPressed: () async {
+                                  // Cambiamos el estado en el servidor (nosotros empezamos a seguirle)
+                                  await userProvider.alternarSeguimiento(user.firebaseUid);
+                                  // Pedimos los datos frescos de este usuario específico
+                                  await _refrescarDatos(false, user.firebaseUid);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Ahora sigues a ${user.nickname}"))
+                                  );
+                                },
+                                icon: Icon(Icons.person_add, size: 18),
+                                label: Text("Seguir", style: TextStyle(fontSize: 16),),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: color.primary.withOpacity(0.3),
+                                  foregroundColor: color.onPrimary,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20)
+                                  ),
+                                  side: BorderSide(color: color.onPrimary.withOpacity(0.4), width: 1)
                                 ),
                               ),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                            )
-                          : ElevatedButton.icon(
-                              onPressed: () async {
-                                // Cambiamos el estado en el servidor (nosotros empezamos a seguirle)
-                                await userProvider.alternarSeguimiento(user.firebaseUid);
-                                // Pedimos los datos frescos de este usuario específico
-                                await _refrescarDatos(false, user.firebaseUid);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text("Ahora sigues a ${user.nickname}"))
-                                );
-                              },
-                              icon: Icon(Icons.person_add, size: 18),
-                              label: Text("Seguir", style: TextStyle(fontSize: 16),),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: color.primary.withOpacity(0.3),
-                                foregroundColor: color.onPrimary,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20)
-                                ),
-                                side: BorderSide(color: color.onPrimary.withOpacity(0.4), width: 1)
-                              ),
+                      ),
+        
+                    // Avatar
+                    Positioned(
+                      bottom: -60,
+                      child: GestureDetector(
+                        onTap: () => _verImagenAmpliada(context, ImageHelper.user(user.fotoPerfil)),
+                        child: Container(
+                          padding: EdgeInsets.all(0),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: color.surfaceContainerLowest,
+                            border: Border.all(color: color.surfaceContainerLowest, width: 4),
+                          ),
+                          child: ClipOval(
+                            child: SizedBox(
+                              width: 130,
+                              height: 130,
+                              child: Builder(builder: (context) {
+                                final String ruta = ImageHelper.user(user.fotoPerfil);
+                                if (ImageHelper.isAsset(ruta)) {
+                                  return Image.asset(ruta, fit: BoxFit.cover);
+                                } else {
+                                  return Image.network(
+                                    ruta,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Shimmer.fromColors(
+                                        baseColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850]! : Colors.grey[300]!,
+                                        highlightColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[100]!,
+                                        child: Container(color: Colors.white),
+                                      );
+                                    },
+                                    errorBuilder: (_, __, ___) => Image.asset(ImageHelper.assetDefaultUser, fit: BoxFit.cover),
+                                  );
+                                }
+                              }),
                             ),
-                    ),
-
-                  // Avatar
-                  Positioned(
-                    bottom: -60,
-                    child: GestureDetector(
-                      onTap: () => _verImagenAmpliada(context, ImageHelper.user(user.fotoPerfil)),
-                      child: Container(
-                        padding: EdgeInsets.all(0),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: color.surfaceContainerLowest,
-                          border: Border.all(color: color.surfaceContainerLowest, width: 4),
-                        ),
-                        child: ClipOval(
-                          child: SizedBox(
-                            width: 130,
-                            height: 130,
-                            child: Builder(builder: (context) {
-                              final String ruta = ImageHelper.user(user.fotoPerfil);
-                              if (ImageHelper.isAsset(ruta)) {
-                                return Image.asset(ruta, fit: BoxFit.cover);
-                              } else {
-                                return Image.network(
-                                  ruta,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Shimmer.fromColors(
-                                      baseColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850]! : Colors.grey[300]!,
-                                      highlightColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[100]!,
-                                      child: Container(color: Colors.white),
-                                    );
-                                  },
-                                  errorBuilder: (_, __, ___) => Image.asset(ImageHelper.assetDefaultUser, fit: BoxFit.cover),
-                                );
-                              }
-                            }),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 70),
-
-              Text(
-                user.nombre,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                "@${user.nickname}",
-                style: TextStyle(color: color.outline),
-              ),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.location_on, size: 17, color: color.outline),
-                  Text(user.localidad, style: TextStyle(color: color.outline)),
-                ],
-              ),
-
-              Text(
-                "Miembro desde ${user.memberSince}",
-                style: TextStyle(color: color.outline, fontSize: 13),
-              ),
-
-              if (user.descripcion.isNotEmpty)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                  child: Text(
-                    user.descripcion,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.blueGrey[700],
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-
-              SizedBox(height: 20),
-
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 20),
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
                   ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+        
+                SizedBox(height: 70),
+        
+                Text(
+                  user.nombre,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "@${user.nickname}",
+                  style: TextStyle(color: color.outline),
+                ),
+        
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _stat(user.mascotas.length.toString(), "Mascotas", pawBlue),
-                    _stat((user.seguidores?.length ?? 0).toString(), "Seguidores", parkRed),
-                    _stat(user.postsCount.toString(), "Posts", color.tertiary),
+                    Icon(Icons.location_on, size: 17, color: color.outline),
+                    Text(user.localidad, style: TextStyle(color: color.outline)),
                   ],
                 ),
-              ),
-
-              SizedBox(height: 25),
-
-              // Header mascotas
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      esMiPerfil
-                          ? "Mis Mascotas"
-                          : "Mascotas de ${user.nombre}",
+        
+                Text(
+                  "Miembro desde ${user.memberSince}",
+                  style: TextStyle(color: color.outline, fontSize: 13),
+                ),
+        
+                if (user.descripcion.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                    child: Text(
+                      user.descripcion,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.blueGrey[700],
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
-                    if (esMiPerfil)
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pushNamed(context, "/form-mascota")
-                          .then((_) => _refrescarDatos(true, user.firebaseUid));
-                        },
-                        icon: Icon(Icons.add, size: 18),
-                        label: Text("Añadir"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: pawBlue,
-                          foregroundColor: color.onPrimary,
+                  ),
+        
+                SizedBox(height: 20),
+        
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: color.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _stat(user.mascotas.length.toString(), "Mascotas", pawBlue),
+                      GestureDetector(
+                      child: _stat((user.seguidores?.length ?? 0).toString(), "Seguidores", parkRed),
+                      onTap: () => Navigator.pushNamed(context, "/seguidores", arguments: user.seguidores)
+                      ),
+                      _stat(user.postsCount.toString(), "Posts", color.tertiary),
+                    ],
+                  ),
+                ),
+        
+                SizedBox(height: 25),
+        
+                // Header mascotas
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        esMiPerfil
+                            ? "Mis Mascotas"
+                            : "Mascotas de ${user.nombre}",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                  ],
+                      if (esMiPerfil)
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pushNamed(context, "/form-mascota")
+                            .then((_) => _refrescarDatos(true, user.firebaseUid));
+                          },
+                          icon: Icon(Icons.add, size: 18),
+                          label: Text("Añadir"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: pawBlue,
+                            foregroundColor: color.onPrimary,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-
-              SizedBox(height: 30),
-
-              // Lista de mascotas
-              user.mascotas.isEmpty
-                  ? Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Text("¡Aún no hay mascotas registradas!"),
-                    )
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: user.mascotas.length,
-                      itemBuilder: (context, index) {
-                        final mascota = user.mascotas[index];
-                        final bool esFavorita =
-                            userProvider.usuario?.mascotasFavoritas.any(
-                              (m) => m.id == mascota.id,
-                            ) ??
-                            false;
-                        return MascotaCard(
-                          mascota: mascota,
-                          mostrarFavorito: !esMiPerfil,
-                          esFavorito: esFavorita,
-                          onTapFavorito: () =>
-                              userProvider.alternarMascotaFavorita(mascota.id!),
-                        );
-                      },
-                    ),
-              SizedBox(height: 30),
-            ],
+        
+                SizedBox(height: 30),
+        
+                // Lista de mascotas
+                user.mascotas.isEmpty
+                    ? Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text("¡Aún no hay mascotas registradas!"),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: user.mascotas.length,
+                        itemBuilder: (context, index) {
+                          final mascota = user.mascotas[index];
+                          final bool esFavorita =
+                              userProvider.usuario?.mascotasFavoritas.any(
+                                (m) => m.id == mascota.id,
+                              ) ??
+                              false;
+                          return MascotaCard(
+                            mascota: mascota,
+                            mostrarFavorito: !esMiPerfil,
+                            esFavorito: esFavorita,
+                            onTapFavorito: () =>
+                                userProvider.alternarMascotaFavorita(mascota.id!),
+                          );
+                        },
+                      ),
+                SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),
