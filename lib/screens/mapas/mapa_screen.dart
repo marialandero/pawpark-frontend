@@ -98,10 +98,10 @@ class _MapaScreenState extends State<MapaScreen> {
 
   IconData _getIconoPorTipo(String tipo) {
     switch (tipo) {
-      case 'parque': return Symbols.nature;
-      case 'plaza': return Symbols.deck;
-      case 'playa': return Symbols.beach_access;
-      default: return Symbols.sound_detection_dog_barking;
+      case 'parque': return Icons.park;
+      case 'plaza': return Icons.account_balance;
+      case 'playa': return Icons.beach_access;
+      default: return Icons.nature_people;
     }
   }
 
@@ -235,8 +235,9 @@ class _MapaScreenState extends State<MapaScreen> {
                           },
                           child: Icon(
                             _getIconoPorTipo(zona.tipo),
-                            fill: 1,
-                            weight: 700,
+                            fill: 1.0,    // Valor entre 0.0 y 1.0
+                            weight: 600.0,
+
                             // AZUL si es mi zona activa, VERDE si hay otros perros, ROJO si está vacío
                             color: zonaProvider.idZonaDondeEstoy == zona.osmId
                                 ? color.primary
