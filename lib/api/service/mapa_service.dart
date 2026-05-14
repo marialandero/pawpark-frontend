@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:pawpark_frontend/core/api_config.dart';
 import '../model/zona_model.dart';
 
 class MapaService {
   // Usamos 10.0.2.2 para que el emulador Android vea el servidor Java de nuestro PC
-  static const String baseUrl = "https://pawpark-backend-production.up.railway.app/mapa";
+  static const String baseUrlMapa = "${ApiConfig.baseUrl}/mapa";
 
   static Future<List<Zona>> buscarZonasEnOSM(double lat, double lng) async {
 
@@ -102,7 +103,7 @@ class MapaService {
   static Future<List<Zona>> sincronizarConBackend(List<Zona> zonas, String uid) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/sincronizar'),
+        Uri.parse('$baseUrlMapa/sincronizar'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'uid': uid,
@@ -125,7 +126,7 @@ class MapaService {
   static Future<bool> hacerCheckIn(String uid, List<String> mascotasIds, String osmId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/checkin'),
+        Uri.parse('$baseUrlMapa/checkin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'uid': uid,
@@ -150,7 +151,7 @@ class MapaService {
   static Future<bool> notificarSalida(String uid) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/salida/$uid'),
+        Uri.parse('$baseUrlMapa/salida/$uid'),
         headers: {'Content-Type': 'application/json'},
       );
       return response.statusCode == 200;

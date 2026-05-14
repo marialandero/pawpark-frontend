@@ -122,7 +122,7 @@ class AjustesScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text("No se pudo eliminar la mascota. Inténtalo de nuevo más tarde."),
-                      backgroundColor: Colors.red,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
                       duration: Duration(seconds: 4),
                     ),
                   );
@@ -200,7 +200,7 @@ class AjustesScreen extends StatelessWidget {
                 }
               }
             },
-            child: Text("BORRAR TODO", style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.bold)),
+            child: Text("BORRAR TODO", style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

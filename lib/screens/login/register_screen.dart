@@ -25,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   double? longitudSeleccionada;
   bool isLoading = false;
   String errorMessage = '';
+  bool _aceptaTerminos = false;
 
   @override
   Widget build(BuildContext context) {
@@ -246,8 +247,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               textAlign: TextAlign.center,
                             ),
                           ],
-        
-                          SizedBox(height: 25),
+
+                          SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _aceptaTerminos,
+                                activeColor: pawBlue,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _aceptaTerminos = value!;
+                                  });
+                                },
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => _mostrarTerminos(context),
+                                  child: RichText(
+                                    text: TextSpan(
+                                      text: "Acepto los ",
+                                      style: TextStyle(color: color.onSurface, fontSize: 13),
+                                      children: [
+                                        TextSpan(
+                                          text: "Términos y Condiciones",
+                                          style: TextStyle(
+                                            color: pawBlue,
+                                            fontWeight: FontWeight.bold,
+                                            decoration: TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 10),
         
                           SizedBox(
                             width: double.infinity,
@@ -313,7 +349,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  void _mostrarTerminos(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Términos y Condiciones"),
+          content: SingleChildScrollView(
+            child: Text(
+              """
+              Términos y Condiciones de Uso - PawPark
+              
+1. Aceptación de los Términos
+Al crear una cuenta en PawPark, el usuario acepta los presentes términos. Esta aplicación tiene como objetivo facilitar el encuentro entre dueños de perros y la gestión de zonas caninas.
+
+2. Naturaleza del Servicio
+PawPark es una red social basada en la ubicación. Al utilizar la función de "Check-in", el usuario consiente que su presencia y la de su mascota sean visibles para otros usuarios de la plataforma en la zona seleccionada.
+
+3. Responsabilidad del Usuario
+El usuario es el único responsable de la veracidad de los datos de su mascota.
+
+PawPark no se hace responsable de los incidentes, daños o altercados que puedan ocurrir durante las "Quedadas" o encuentros físicos. Se recomienda mantener siempre la supervisión de los animales según la normativa local vigente.
+
+Queda prohibida la publicación de contenido ofensivo, violento o que fomente el maltrato animal.
+
+4. Privacidad y Datos
+Los datos de perfil (nombre, foto de mascota, biografía) son públicos para mejorar la experiencia social. PawPark utiliza Firebase para la autenticación segura, asegurando que las contraseñas no sean accesibles por los administradores del sistema.
+
+5. Uso de OpenStreetMap
+PawPark utiliza datos de OpenStreetMap para la geolocalización de parques. El usuario acepta que la precisión de las zonas depende de servicios externos.
+
+6. Baja del Servicio
+El usuario puede eliminar su cuenta en cualquier momento. Al hacerlo, sus datos personales, mascotas y registros de presencia (Check-ins) serán eliminados permanentemente de nuestra base de datos.
+              """,
+              textAlign: TextAlign.justify,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("CERRAR"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void register() async {
+    if (!_aceptaTerminos) {
+      setState(() {
+        errorMessage = "Debes aceptar los términos y condiciones para registrarte";
+      });
+      return; // Esto detiene el registro aquí mismo
+    }
     setState(() {
       errorMessage = '';
       isLoading = true; // Bloqueamos la interfaz
